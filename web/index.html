@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<title>Orbitae · Visor de orbitales</title>
+<style>
+:root{--bg:#0b0f17;--panel:#121927;--line:#243048;--fg:#e6ebf5;--mut:#9aa7bd;--acc:#5aa2ff}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;grid-template-columns:340px 1fr}
+aside{padding:16px;overflow:auto;background:var(--panel);border-right:1px solid var(--line)}
+main{position:relative;min-height:0}
+canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+h1{font-size:20px;margin:0}.sub{color:var(--mut);margin:0 0 12px;font-size:13px}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:16px 0 6px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
+.row b{width:34px;color:var(--mut);font-weight:500;font-size:13px}
+button{font:inherit;color:var(--fg);background:#1a2336;border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
+button[aria-pressed=true],button[aria-selected=true]{background:var(--acc);border-color:var(--acc);color:#06101f}
+button:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+label{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+input[type=range]{width:160px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:14px}dt{color:var(--mut)}dd{margin:0}
+#txt{font-size:14px;color:#d3dbea;margin:8px 0 0}
+.note{font-size:12px;color:var(--mut);margin-top:14px}
+#msg{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--mut)}
+@media(max-width:760px){body{height:auto;grid-template-columns:1fr;grid-template-rows:60vh auto}main{order:1}aside{order:2;border-right:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<aside>
+<h1>Orbitae</h1><p class="sub">Orbitales atómicos con rigor verificable</p>
+<h2>Orbital (hidrógeno, Z = 1)</h2><div id="sel"></div>
+<h2>Vista</h2>
+<label>Puntos <input id="cnt" type="range" min="2000" max="30000" step="1000" value="20000"></label>
+<label>Tamaño <input id="siz" type="range" min="1" max="8" step="0.5" value="3"></label>
+<label><span>Fase en dos colores</span><input id="two" type="checkbox" checked></label>
+<label><span>Escala común (tamaños reales)</span><input id="com" type="checkbox"></label>
+<label><span>Rotación automática</span><input id="rot" type="checkbox" checked></label>
+<h2>Datos</h2><dl id="info"></dl>
+<h2>Qué estás viendo</h2>
+<div class="row" role="tablist" id="tabs"></div><p id="txt"></p>
+<p class="note">Herramienta educativa y científica, no clínica. Arrastra para girar; rueda para acercar. Cada punto es una posición posible del electrón, muestreada de |ψ|².</p>
+</aside>
+<main><canvas id="c" aria-label="Nube electrónica en 3D"></canvas><div id="msg" role="alert"></div></main>
+<script>
+(async()=>{
+const $=s=>document.querySelector(s),el=(t,x)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;return e};
+const cv=$('#c'),msg=$('#msg'),fail=t=>{msg.textContent=t;msg.style.display='grid'};
+const TXT={
+"Estudiante":"Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo.",
+"Medicina y enfermería":"Esta es la nube de un solo electrón (hidrógeno), la base para entender la química del cuerpo. La forma de los orbitales ayuda a entender por qué los enlaces tienen orientaciones concretas, como en el agua, y por qué metales como el hierro, que usan orbitales d, pueden unir oxígeno en la hemoglobina. Los átomos con más electrones llegarán en versiones posteriores. Material educativo, no clínico.",
+"Investigador":"ψ_nlm = R_nl(r)·S_lm(θ,φ) en unidades atómicas con Z = 1 y armónicos esféricos reales (fase de Condon-Shortley, lóbulos positivos hacia +x, +y, +z). Los puntos se muestrean por CDF inversa de r²R² y por CDF discreta de |S|² sin θ en una rejilla de 361×720. La nube se trunca en el radio que contiene el 99,5 % de la probabilidad. Los resultados se contrastan con la suite de pruebas del repositorio."};
+try{
+const gl=cv.getContext('webgl',{alpha:false,antialias:false});
+if(!gl)throw new Error('Tu navegador no soporta WebGL.');
+const VS=`attribute vec3 p;attribute float s;
+uniform mat3 u_r;uniform float u_e,u_d,u_f,u_a,u_sz,u_two;uniform vec3 c0,c1,c2;
+varying vec3 v;
+void main(){vec3 q=u_r*(vec3(p.x,p.z,-p.y)*u_e);q.z-=u_d;
+gl_Position=vec4(q.x*u_f/u_a,q.y*u_f,q.z*0.01,-q.z);
+gl_PointSize=u_sz*u_d/(-q.z);
+v=u_two>0.5?(s>0.5?c1:c0):c2;}`;
+const FS=`precision mediump float;varying vec3 v;
+void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.;if(r>1.)discard;gl_FragColor=vec4(v,.3*(1.-r));}`;
+const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o};
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);
+if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error('Error al enlazar los shaders.');
+gl.useProgram(pr);
+const U=n=>gl.getUniformLocation(pr,n),A=n=>gl.getAttribLocation(pr,n);
+const uni=Object.fromEntries(['u_r','u_e','u_d','u_f','u_a','u_sz','u_two'].map(n=>[n,U(n)]));
+gl.uniform3f(U('c0'),.35,.62,1);gl.uniform3f(U('c1'),1,.38,.32);gl.uniform3f(U('c2'),.98,.82,.5);
+gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.clearColor(.043,.059,.09,1);
+const bp=gl.createBuffer(),bs=gl.createBuffer(),ap=A('p'),as=A('s');
+let cur=null,maxExt=1,yaw=.6,pitch=.35,dist=3.2,tok=0;
+const fmt=(x,d=2)=>x.toLocaleString('es',{maximumFractionDigits:d});
+const lab=(l)=>{const f=document.createDocumentFragment(),[a,b]=l.split('_');f.append(a);if(b)f.append(el('sub',b));return f};
+function info(m){const d=$('#info');d.replaceChildren();
+for(const [k,v] of [['Orbital',m.label.replace('_','')],['n, l, m',`${m.n}, ${m.l}, ${m.m}`],['Energía',fmt(m.energy_ev)+' eV'],
+['Radio 95 %',`${fmt(m.r95_angstrom)} Å (${fmt(m.r95_a0,1)} a₀)`],['Nodos rad./ang.',`${m.radial_nodes} / ${m.angular_nodes}`]]){d.append(el('dt',k),el('dd',v))}}
+async function load(m){const t=++tok,r=await fetch('data/'+m.file);if(!r.ok)throw new Error('datos');
+const b=await r.arrayBuffer();if(t!==tok)return;const N=m.count;
+gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.bufferData(gl.ARRAY_BUFFER,new Int16Array(b,0,3*N),gl.STATIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(b,6*N,N),gl.STATIC_DRAW);
+cur=m;const c=$('#cnt');c.max=N;c.value=Math.min(+c.value,N);info(m);
+document.querySelectorAll('#sel button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===m.file))}
+const data=await (await fetch('data/index.json')).json();
+maxExt=Math.max(...data.orbitals.map(o=>o.extent_a0));
+const sel=$('#sel');
+for(const n of [...new Set(data.orbitals.map(o=>o.n))]){const row=el('div');row.className='row';row.append(el('b','n='+n));
+for(const o of data.orbitals.filter(o=>o.n===n)){const b=el('button');b.append(lab(o.label));b.dataset.f=o.file;b.setAttribute('aria-pressed','false');
+b.onclick=()=>load(o).catch(e=>fail('No se pudo cargar el orbital.'));row.append(b)}sel.append(row)}
+const tabs=$('#tabs');
+for(const k of Object.keys(TXT)){const b=el('button',k);b.setAttribute('role','tab');b.onclick=()=>{$('#txt').textContent=TXT[k];tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b))};tabs.append(b)}
+tabs.firstChild.click();
+let drag=null;
+cv.onpointerdown=e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=>{if(!drag)return;yaw+=(e.clientX-drag[0])*.008;pitch=Math.max(-1.5,Math.min(1.5,pitch+(e.clientY-drag[1])*.008));drag=[e.clientX,e.clientY]};
+cv.onpointerup=cv.onpointercancel=()=>drag=null;
+cv.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(1.6,Math.min(8,dist*Math.exp(e.deltaY*.001)))},{passive:false});
+function frame(){const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth*dpr|0,h=cv.clientHeight*dpr|0;
+if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT);
+if($('#rot').checked&&!drag)yaw+=.004;
+if(cur){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+const r=[cy,0,-sy,-sp*sy,cp,-sp*cy,cp*sy,sp,cp*cy],a=w/Math.max(h,1);
+gl.uniformMatrix3fv(uni.u_r,false,[r[0],r[3],r[6],r[1],r[4],r[7],r[2],r[5],r[8]]);
+gl.uniform1f(uni.u_e,$('#com').checked?cur.extent_a0/maxExt:1);gl.uniform1f(uni.u_d,dist);
+gl.uniform1f(uni.u_f,2.414*Math.min(1,a));gl.uniform1f(uni.u_a,a);gl.uniform1f(uni.u_sz,+$('#siz').value*dpr);
+gl.uniform1f(uni.u_two,$('#two').checked?1:0);
+gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.SHORT,true,0,0);
+gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.enableVertexAttribArray(as);gl.vertexAttribPointer(as,1,gl.UNSIGNED_BYTE,false,0,0);
+gl.drawArrays(gl.POINTS,0,Math.min(+$('#cnt').value,cur.count))}
+requestAnimationFrame(frame)}
+await load(data.orbitals.find(o=>o.label==='2p_x')||data.orbitals[0]);
+frame();
+}catch(e){fail(e.message==='datos'||e instanceof TypeError||e instanceof SyntaxError
+?'No se pudieron cargar los datos. Genera los datos y sirve la carpeta web/ con: python3 -m http.server -d web 8000 y abre http://localhost:8000':e.message)}
+})();
+</script>
+</body>
+</html>
