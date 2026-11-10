@@ -13,6 +13,7 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,
 aside{padding:16px;overflow:auto;background:var(--panel);border-right:1px solid var(--line)}
 main{position:relative;min-height:0}
 canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#rad{height:auto;cursor:default;touch-action:auto;margin-top:6px}
 h1{font-size:20px;margin:0}.sub{color:var(--mut);margin:0 0 12px;font-size:13px}
 h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:16px 0 6px}
 .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
@@ -24,7 +25,7 @@ label{display:flex;justify-content:space-between;gap:8px;align-items:center;marg
 input[type=range]{width:160px}
 dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:14px}dt{color:var(--mut)}dd{margin:0}
 #txt{font-size:14px;color:#d3dbea;margin:8px 0 0}
-.note{font-size:12px;color:var(--mut);margin-top:14px}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
 #msg{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--mut)}
 @media(max-width:760px){body{height:auto;grid-template-columns:1fr;grid-template-rows:60vh auto}main{order:1}aside{order:2;border-right:0;border-top:1px solid var(--line)}}
 </style>
@@ -40,6 +41,9 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 <label><span>Escala común (tamaños reales)</span><input id="com" type="checkbox"></label>
 <label><span>Rotación automática</span><input id="rot" type="checkbox" checked></label>
 <h2>Datos</h2><dl id="info"></dl>
+<h2>Distribución radial</h2>
+<canvas id="rad" width="300" height="140" aria-label="Probabilidad en función de la distancia al núcleo"></canvas>
+<p class="note">Azul: probabilidad de hallar al electrón a una distancia r del núcleo. Puntos rojos: nodos (probabilidad cero). Línea amarilla: radio que encierra el 95 %.</p>
 <h2>Qué estás viendo</h2>
 <div class="row" role="tablist" id="tabs"></div><p id="txt"></p>
 <p class="note">Herramienta educativa y científica, no clínica. Arrastra para girar; rueda para acercar. Cada punto es una posición posible del electrón, muestreada de |ψ|².</p>
@@ -50,9 +54,9 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 const $=s=>document.querySelector(s),el=(t,x)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;return e};
 const cv=$('#c'),msg=$('#msg'),fail=t=>{msg.textContent=t;msg.style.display='grid'};
 const TXT={
-"Estudiante":"Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo.",
+"Estudiante":"Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol, f formas más complejas) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo. La gráfica radial muestra por qué hay capas: la probabilidad sube y baja con la distancia, y los nodos son esferas donde vale cero.",
 "Medicina y enfermería":"Esta es la nube de un solo electrón (hidrógeno), la base para entender la química del cuerpo. La forma de los orbitales ayuda a entender por qué los enlaces tienen orientaciones concretas, como en el agua, y por qué metales como el hierro, que usan orbitales d, pueden unir oxígeno en la hemoglobina. Los átomos con más electrones llegarán en versiones posteriores. Material educativo, no clínico.",
-"Investigador":"ψ_nlm = R_nl(r)·S_lm(θ,φ) en unidades atómicas con Z = 1 y armónicos esféricos reales (fase de Condon-Shortley, lóbulos positivos hacia +x, +y, +z). Los puntos se muestrean por CDF inversa de r²R² y por CDF discreta de |S|² sin θ en una rejilla de 361×720. La nube se trunca en el radio que contiene el 99,5 % de la probabilidad. Los resultados se contrastan con la suite de pruebas del repositorio."};
+"Investigador":"ψ_nlm = R_nl(r)·S_lm(θ,φ) en unidades atómicas con Z = 1 y armónicos esféricos reales (fase de Condon-Shortley, lóbulos positivos hacia +x, +y, +z). Los puntos se muestrean por CDF inversa de r²R² y por CDF discreta de |S|² sin θ en una rejilla de 361×720. La nube se trunca en el radio que contiene el 99,5 % de la probabilidad. Los nodos radiales se obtienen de los cambios de signo de R_nl y se contrastan con valores analíticos (2s: 2 a₀; 3s: 1,902 y 7,098 a₀) en la suite de pruebas."};
 try{
 const gl=cv.getContext('webgl',{alpha:false,antialias:false});
 if(!gl)throw new Error('Tu navegador no soporta WebGL.');
@@ -74,19 +78,29 @@ const uni=Object.fromEntries(['u_r','u_e','u_d','u_f','u_a','u_sz','u_two'].map(
 gl.uniform3f(U('c0'),.35,.62,1);gl.uniform3f(U('c1'),1,.38,.32);gl.uniform3f(U('c2'),.98,.82,.5);
 gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.clearColor(.043,.059,.09,1);
 const bp=gl.createBuffer(),bs=gl.createBuffer(),ap=A('p'),as=A('s');
-let cur=null,maxExt=1,yaw=.6,pitch=.35,dist=3.2,tok=0;
-const fmt=(x,d=2)=>x.toLocaleString('es',{maximumFractionDigits:d});
-const lab=(l)=>{const f=document.createDocumentFragment(),[a,b]=l.split('_');f.append(a);if(b)f.append(el('sub',b));return f};
+let cur=null,maxExt=1,yaw=.6,pitch=.35,dist=3.2,tok=0,data=null;
+const A0=0.529177,fmt=(x,d=2)=>x.toLocaleString('es',{maximumFractionDigits:d});
+const lab=l=>{const f=document.createDocumentFragment(),[a,b]=l.split('_');f.append(a);if(b)f.append(el('sub',b));return f};
+function drawRad(m){const c=$('#rad'),g=c.getContext('2d'),W=c.width,H=c.height,d=data.radial[m.radial_key];
+g.clearRect(0,0,W,H);if(!d)return;
+const L=30,B=H-22,T=8,R=W-8,ext=m.extent_a0,x=r=>L+(R-L)*r/ext,y=p=>B-(B-T)*p;
+g.lineWidth=1;g.strokeStyle='#243048';g.beginPath();g.moveTo(L,T);g.lineTo(L,B);g.lineTo(R,B);g.stroke();
+g.beginPath();d.r.forEach((r,i)=>i?g.lineTo(x(r),y(d.p[i])):g.moveTo(x(r),y(d.p[i])));
+g.strokeStyle='#5aa2ff';g.lineWidth=2;g.stroke();
+g.setLineDash([4,3]);g.lineWidth=1;g.strokeStyle='#f0c674';g.beginPath();g.moveTo(x(m.r95_a0),T);g.lineTo(x(m.r95_a0),B);g.stroke();g.setLineDash([]);
+g.fillStyle='#ff6b5e';for(const r of d.nodes){g.beginPath();g.arc(x(r),B,4,0,7);g.fill()}
+g.fillStyle='#9aa7bd';g.font='11px system-ui,sans-serif';g.fillText('0',L-3,B+14);g.fillText(fmt(ext*A0,1)+' Å',R-42,B+14);g.fillText('r²R²',2,T+8)}
 function info(m){const d=$('#info');d.replaceChildren();
 for(const [k,v] of [['Orbital',m.label.replace('_','')],['n, l, m',`${m.n}, ${m.l}, ${m.m}`],['Energía',fmt(m.energy_ev)+' eV'],
-['Radio 95 %',`${fmt(m.r95_angstrom)} Å (${fmt(m.r95_a0,1)} a₀)`],['Nodos rad./ang.',`${m.radial_nodes} / ${m.angular_nodes}`]]){d.append(el('dt',k),el('dd',v))}}
+['Radio 95 %',`${fmt(m.r95_angstrom)} Å (${fmt(m.r95_a0,1)} a₀)`],['Nodos rad./ang.',`${m.radial_nodes} / ${m.angular_nodes}`]]){d.append(el('dt',k),el('dd',v))}
+drawRad(m)}
 async function load(m){const t=++tok,r=await fetch('data/'+m.file);if(!r.ok)throw new Error('datos');
 const b=await r.arrayBuffer();if(t!==tok)return;const N=m.count;
 gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.bufferData(gl.ARRAY_BUFFER,new Int16Array(b,0,3*N),gl.STATIC_DRAW);
 gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(b,6*N,N),gl.STATIC_DRAW);
 cur=m;const c=$('#cnt');c.max=N;c.value=Math.min(+c.value,N);info(m);
 document.querySelectorAll('#sel button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===m.file))}
-const data=await (await fetch('data/index.json')).json();
+data=await (await fetch('data/index.json')).json();
 maxExt=Math.max(...data.orbitals.map(o=>o.extent_a0));
 const sel=$('#sel');
 for(const n of [...new Set(data.orbitals.map(o=>o.n))]){const row=el('div');row.className='row';row.append(el('b','n='+n));
