@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "orbitalab"
+name = "orbitae"
 version = "0.1.0"
 description = "Orbitales atómicos hidrogenoides reales, muestreo y validación numérica (educativo y científico)"
 readme = "README.md"
