@@ -8,8 +8,9 @@
 <style>
 :root{--bg:#0b0f17;--panel:#121927;--line:#243048;--fg:#e6ebf5;--mut:#9aa7bd;--acc:#5aa2ff}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;grid-template-columns:340px 1fr}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;grid-template-columns:360px 1fr}
 aside{padding:16px;overflow:auto;background:var(--panel);border-right:1px solid var(--line)}
 main{position:relative;min-height:0}
 canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
@@ -17,10 +18,13 @@ canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 h1{font-size:20px;margin:0}.sub{color:var(--mut);margin:0 0 12px;font-size:13px}
 h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:16px 0 6px}
 .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
-.row b{width:34px;color:var(--mut);font-weight:500;font-size:13px}
+.row b{min-width:34px;color:var(--mut);font-weight:500;font-size:13px}
 button{font:inherit;color:var(--fg);background:#1a2336;border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
 button[aria-pressed=true],button[aria-selected=true]{background:var(--acc);border-color:var(--acc);color:#06101f}
 button:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#pt{display:grid;grid-template-columns:repeat(18,1fr);gap:2px;margin:6px 0}
+#pt button{padding:2px 0;font-size:11px;min-width:0;border-radius:4px}
+#pt button.bio{border-bottom:3px solid #3ecf8e}
 label{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:6px 0;font-size:14px}
 input[type=range]{width:160px}
 dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:14px}dt{color:var(--mut)}dd{margin:0}
@@ -33,30 +37,37 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 <body>
 <aside>
 <h1>Orbitae</h1><p class="sub">Orbitales atómicos con rigor verificable</p>
-<h2>Orbital (hidrógeno, Z = 1)</h2><div id="sel"></div>
+<div class="row" id="modes"><button data-m="h" aria-pressed="true">Hidrógeno exacto</button><button data-m="a" aria-pressed="false">Átomos 1–36 (Slater)</button></div>
+<div id="hpanel"><h2>Orbital (hidrógeno, Z = 1)</h2><div id="sel"></div></div>
+<div id="apanel" hidden><h2>Tabla periódica</h2><div id="pt"></div><p class="note">Borde verde: elemento esencial en la biología humana.</p><h2>Qué mostrar</h2><div id="asel"></div></div>
 <h2>Vista</h2>
 <label>Puntos <input id="cnt" type="range" min="2000" max="30000" step="1000" value="20000"></label>
 <label>Tamaño <input id="siz" type="range" min="1" max="8" step="0.5" value="3"></label>
 <label><span>Fase en dos colores</span><input id="two" type="checkbox" checked></label>
 <label><span>Escala común (tamaños reales)</span><input id="com" type="checkbox"></label>
 <label><span>Rotación automática</span><input id="rot" type="checkbox" checked></label>
-<h2>Datos</h2><dl id="info"></dl>
+<h2>Datos</h2><dl id="info"></dl><p id="bio" class="note"></p>
 <h2>Distribución radial</h2>
 <canvas id="rad" width="300" height="140" aria-label="Probabilidad en función de la distancia al núcleo"></canvas>
-<p class="note">Azul: probabilidad de hallar al electrón a una distancia r del núcleo. Puntos rojos: nodos (probabilidad cero). Línea amarilla: radio que encierra el 95 %.</p>
+<p class="note" id="radnote"></p>
 <h2>Qué estás viendo</h2>
 <div class="row" role="tablist" id="tabs"></div><p id="txt"></p>
-<p class="note">Herramienta educativa y científica, no clínica. Arrastra para girar; rueda para acercar. Cada punto es una posición posible del electrón, muestreada de |ψ|².</p>
+<p class="note">Herramienta educativa y científica, no clínica. Arrastra para girar; rueda para acercar. Cada punto es una posición posible del electrón.</p>
 </aside>
 <main><canvas id="c" aria-label="Nube electrónica en 3D"></canvas><div id="msg" role="alert"></div></main>
 <script>
 (async()=>{
 const $=s=>document.querySelector(s),el=(t,x)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;return e};
 const cv=$('#c'),msg=$('#msg'),fail=t=>{msg.textContent=t;msg.style.display='grid'};
-const TXT={
-"Estudiante":"Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol, f formas más complejas) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo. La gráfica radial muestra por qué hay capas: la probabilidad sube y baja con la distancia, y los nodos son esferas donde vale cero.",
-"Medicina y enfermería":"Esta es la nube de un solo electrón (hidrógeno), la base para entender la química del cuerpo. La forma de los orbitales ayuda a entender por qué los enlaces tienen orientaciones concretas, como en el agua, y por qué metales como el hierro, que usan orbitales d, pueden unir oxígeno en la hemoglobina. Los átomos con más electrones llegarán en versiones posteriores. Material educativo, no clínico.",
-"Investigador":"ψ_nlm = R_nl(r)·S_lm(θ,φ) en unidades atómicas con Z = 1 y armónicos esféricos reales (fase de Condon-Shortley, lóbulos positivos hacia +x, +y, +z). Los puntos se muestrean por CDF inversa de r²R² y por CDF discreta de |S|² sin θ en una rejilla de 361×720. La nube se trunca en el radio que contiene el 99,5 % de la probabilidad. Los nodos radiales se obtienen de los cambios de signo de R_nl y se contrastan con valores analíticos (2s: 2 a₀; 3s: 1,902 y 7,098 a₀) en la suite de pruebas."};
+const TABS=['Estudiante','Medicina y enfermería','Investigador'];
+const THX=[
+"Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol, f formas más complejas) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo. La gráfica radial muestra por qué hay capas: la probabilidad sube y baja con la distancia, y los nodos son esferas donde vale cero.",
+"Esta es la nube de un solo electrón (hidrógeno), la base para entender la química del cuerpo. La forma de los orbitales ayuda a entender por qué los enlaces tienen orientaciones concretas, como en el agua, y por qué metales como el hierro, que usan orbitales d, pueden unir oxígeno en la hemoglobina. Prueba el modo Átomos para ver otros elementos. Material educativo, no clínico.",
+"ψ_nlm = R_nl(r)·S_lm(θ,φ) en unidades atómicas con Z = 1 y armónicos esféricos reales (fase de Condon-Shortley, lóbulos positivos hacia +x, +y, +z). Los puntos se muestrean por CDF inversa de r²R² y por CDF discreta de |S|² sin θ en una rejilla de 361×720. La nube se trunca en el radio que contiene el 99,5 % de la probabilidad. Los nodos radiales salen de los cambios de signo de R_nl y se contrastan con valores analíticos (2s: 2 a₀; 3s: 1,902 y 7,098 a₀) en la suite de pruebas."];
+const TAX=[
+"Cada átomo reparte sus electrones en capas y subcapas (1s, 2s, 2p…). La nube total suma todos los electrones: es esférica y más densa cerca del núcleo. Los orbitales individuales conservan sus formas (s, p, d) pero cambian de tamaño: cuanta más carga positiva siente un electrón (Z efectiva), más se acerca al núcleo. En la gráfica, las capas aparecen como picos.",
+"Los elementos con borde verde son esenciales en la biología humana. Lo que cambia de un elemento a otro es el tamaño de la nube y cómo se llenan las capas: los electrones de la última capa (valencia) deciden qué enlaces forma el átomo y, por tanto, su papel en el cuerpo. El hierro, por ejemplo, tiene la subcapa 3d parcialmente llena, clave para unir oxígeno en la hemoglobina. Material educativo, no clínico.",
+"Aproximación de campo central: reglas de Slater (1930) para la carga efectiva Z_eff y orbitales tipo Slater R ∝ r^(n*−1)·e^(−ζr), con ζ = Z_eff/n* y n* = 1, 2, 3 y 3,7 para n = 1…4. Es un modelo didáctico: sin nodos radiales ni correlación electrónica; la nube total es el promedio esférico de las subcapas ocupadas. Muestreo radial r ~ Gamma(2n*+1, 1/(2ζ)), contrastado con la media analítica; los ángulos usan los mismos armónicos reales validados. Configuraciones del estado fundamental con las excepciones de Cr y Cu."];
 try{
 const gl=cv.getContext('webgl',{alpha:false,antialias:false});
 if(!gl)throw new Error('Tu navegador no soporta WebGL.');
@@ -78,37 +89,76 @@ const uni=Object.fromEntries(['u_r','u_e','u_d','u_f','u_a','u_sz','u_two'].map(
 gl.uniform3f(U('c0'),.35,.62,1);gl.uniform3f(U('c1'),1,.38,.32);gl.uniform3f(U('c2'),.98,.82,.5);
 gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.clearColor(.043,.059,.09,1);
 const bp=gl.createBuffer(),bs=gl.createBuffer(),ap=A('p'),as=A('s');
-let cur=null,maxExt=1,yaw=.6,pitch=.35,dist=3.2,tok=0,data=null;
+let cur=null,maxExt=1,hMax=1,yaw=.6,pitch=.35,dist=3.2,tok=0,data=null,mode='h',hCur=null,pools=null,atoms=null,aCur=null,tab=0;
 const A0=0.529177,fmt=(x,d=2)=>x.toLocaleString('es',{maximumFractionDigits:d});
 const lab=l=>{const f=document.createDocumentFragment(),[a,b]=l.split('_');f.append(a);if(b)f.append(el('sub',b));return f};
-function drawRad(m){const c=$('#rad'),g=c.getContext('2d'),W=c.width,H=c.height,d=data.radial[m.radial_key];
-g.clearRect(0,0,W,H);if(!d)return;
-const L=30,B=H-22,T=8,R=W-8,ext=m.extent_a0,x=r=>L+(R-L)*r/ext,y=p=>B-(B-T)*p;
+const prng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+function upload(pos,sign,count,ext){
+gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.bufferData(gl.ARRAY_BUFFER,pos,gl.STATIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.bufferData(gl.ARRAY_BUFFER,sign,gl.STATIC_DRAW);
+cur={count,extent_a0:ext};const c=$('#cnt');c.max=count;c.value=Math.min(+c.value,count)}
+function chart(rs,curves,ext,marks,r95,sq,lbl){const c=$('#rad'),g=c.getContext('2d'),W=c.width,H=c.height;g.clearRect(0,0,W,H);
+const L=30,B=H-22,T=8,R=W-8,fx=r=>L+(R-L)*(sq?Math.sqrt(r/ext):r/ext),fy=p=>B-(B-T)*p;
 g.lineWidth=1;g.strokeStyle='#243048';g.beginPath();g.moveTo(L,T);g.lineTo(L,B);g.lineTo(R,B);g.stroke();
-g.beginPath();d.r.forEach((r,i)=>i?g.lineTo(x(r),y(d.p[i])):g.moveTo(x(r),y(d.p[i])));
-g.strokeStyle='#5aa2ff';g.lineWidth=2;g.stroke();
-g.setLineDash([4,3]);g.lineWidth=1;g.strokeStyle='#f0c674';g.beginPath();g.moveTo(x(m.r95_a0),T);g.lineTo(x(m.r95_a0),B);g.stroke();g.setLineDash([]);
-g.fillStyle='#ff6b5e';for(const r of d.nodes){g.beginPath();g.arc(x(r),B,4,0,7);g.fill()}
-g.fillStyle='#9aa7bd';g.font='11px system-ui,sans-serif';g.fillText('0',L-3,B+14);g.fillText(fmt(ext*A0,1)+' Å',R-42,B+14);g.fillText('r²R²',2,T+8)}
-function info(m){const d=$('#info');d.replaceChildren();
-for(const [k,v] of [['Orbital',m.label.replace('_','')],['n, l, m',`${m.n}, ${m.l}, ${m.m}`],['Energía',fmt(m.energy_ev)+' eV'],
-['Radio 95 %',`${fmt(m.r95_angstrom)} Å (${fmt(m.r95_a0,1)} a₀)`],['Nodos rad./ang.',`${m.radial_nodes} / ${m.angular_nodes}`]]){d.append(el('dt',k),el('dd',v))}
-drawRad(m)}
+for(const k of curves){g.beginPath();rs.forEach((r,i)=>i?g.lineTo(fx(r),fy(k.y[i])):g.moveTo(fx(r),fy(k.y[i])));g.strokeStyle=k.c;g.lineWidth=2;g.stroke()}
+if(r95){g.setLineDash([4,3]);g.lineWidth=1;g.strokeStyle='#f0c674';g.beginPath();g.moveTo(fx(r95),T);g.lineTo(fx(r95),B);g.stroke();g.setLineDash([])}
+g.fillStyle='#ff6b5e';for(const r of marks){g.beginPath();g.arc(fx(r),B,4,0,7);g.fill()}
+g.fillStyle='#9aa7bd';g.font='11px system-ui,sans-serif';g.fillText('0',L-3,B+14);g.fillText(fmt(ext*A0,1)+' Å',R-42,B+14);g.fillText(lbl,2,T+8)}
+function rows(list){const d=$('#info');d.replaceChildren();for(const [k,v] of list)d.append(el('dt',k),el('dd',v))}
+/* hidrógeno */
+function info(m){rows([['Orbital',m.label.replace('_','')],['n, l, m',`${m.n}, ${m.l}, ${m.m}`],['Energía',fmt(m.energy_ev)+' eV'],
+['Radio 95 %',`${fmt(m.r95_angstrom)} Å (${fmt(m.r95_a0,1)} a₀)`],['Nodos rad./ang.',`${m.radial_nodes} / ${m.angular_nodes}`]]);
+$('#bio').textContent='';
+$('#radnote').textContent='Azul: probabilidad de hallar al electrón a una distancia r del núcleo. Puntos rojos: nodos (probabilidad cero). Línea amarilla: radio que encierra el 95 %.';
+const d=data.radial[m.radial_key];if(d)chart(d.r,[{y:d.p,c:'#5aa2ff'}],m.extent_a0,d.nodes,m.r95_a0,false,'r²R²')}
 async function load(m){const t=++tok,r=await fetch('data/'+m.file);if(!r.ok)throw new Error('datos');
-const b=await r.arrayBuffer();if(t!==tok)return;const N=m.count;
-gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.bufferData(gl.ARRAY_BUFFER,new Int16Array(b,0,3*N),gl.STATIC_DRAW);
-gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(b,6*N,N),gl.STATIC_DRAW);
-cur=m;const c=$('#cnt');c.max=N;c.value=Math.min(+c.value,N);info(m);
+const b=await r.arrayBuffer();if(t!==tok)return;const N=m.count;hCur=m;maxExt=hMax;
+upload(new Int16Array(b,0,3*N),new Uint8Array(b,6*N,N),N,m.extent_a0);info(m);
 document.querySelectorAll('#sel button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===m.file))}
-data=await (await fetch('data/index.json')).json();
-maxExt=Math.max(...data.orbitals.map(o=>o.extent_a0));
+/* átomos */
+async function loadPools(){if(pools)return;const idx=await (await fetch('data/atoms.json')).json(),n=idx.pools.n,ang={},rad={};
+await Promise.all([...idx.pools.ang.map(async p=>{const b=await (await fetch('data/'+p.file)).arrayBuffer();ang[p.l+','+p.m]={d:new Int16Array(b,0,3*n),s:new Uint8Array(b,6*n,n)}}),
+...idx.pools.rad.map(async p=>{rad[p.n]=new Float32Array(await (await fetch('data/'+p.file)).arrayBuffer())})]);
+pools={n,ang,rad};atoms=idx.atoms}
+function build(parts,ext,seed){const N=pools.n,tot=parts.reduce((s,p)=>s+p.w,0),pos=new Int16Array(3*N),sg=new Uint8Array(N),rnd=prng(seed);let k=0;
+for(let i=0;i<N;i++){let u=rnd()*tot,p=parts[0];for(const q of parts){p=q;if((u-=q.w)<0)break}
+const r=pools.rad[p.n][i]/(2*p.zeta);if(r>ext)continue;const a=pools.ang[p.l+','+p.m],f=r/ext;
+pos[3*k]=Math.round(a.d[3*i]*f);pos[3*k+1]=Math.round(a.d[3*i+1]*f);pos[3*k+2]=Math.round(a.d[3*i+2]*f);sg[k]=a.s[i];k++}
+return{pos:pos.slice(0,3*k),sign:sg.slice(0,k),count:k}}
+function pick(a,s,m){aCur=a;const key=s?s.label+':'+m.m:'t';let parts,ext;
+if(s){parts=[{n:s.n,l:s.l,m:m.m,zeta:s.zeta,w:1}];ext=s.extent_a0}
+else{parts=a.subshells.map(q=>({n:q.n,l:0,m:0,zeta:q.zeta,w:q.occ}));ext=a.extent_a0}
+const b=build(parts,ext,a.Z*7+(s?s.n*3+s.l+1:0));maxExt=a.extent_a0;upload(b.pos,b.sign,b.count,ext);
+const L=[['Elemento',`${a.name} (${a.symbol}), Z = ${a.Z}`],['Configuración',a.config]];
+if(s)L.push(['Orbital',m.label.replace('_','')],['Z efectiva',fmt(s.zeff)],['n*, ζ',`${fmt(s.nstar,1)}, ${fmt(s.zeta,3)}`],['Radio 99,5 %',`${fmt(ext*A0)} Å`]);
+else L.push(['Electrones',String(a.Z)],['Radio 99,5 %',`${fmt(ext*A0)} Å`]);
+rows(L);$('#bio').textContent=a.bio?'Relevancia biomédica: '+a.bio:'';
+$('#radnote').textContent='Dorado: probabilidad total de hallar un electrón del átomo a distancia r (las capas son los picos; eje en escala raíz). Azul: la subcapa elegida. Los orbitales de Slater no tienen nodos radiales.';
+const R=a.radial,cs=[{y:R.total,c:'#f0c674'}];if(s)cs.push({y:R.shells[s.label],c:'#5aa2ff'});
+chart(R.r,cs,a.extent_a0,[],0,true,'densidad');
+document.querySelectorAll('#asel button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===key))}
+function showAtom(a){const box=$('#asel');box.replaceChildren();
+const r0=el('div');r0.className='row';const bt=el('button','Nube total');bt.dataset.k='t';bt.onclick=()=>pick(a,null,null);r0.append(bt);box.append(r0);
+for(const s of a.subshells){const r=el('div');r.className='row';const h=el('b',s.label);h.append(el('sup',String(s.occ)));r.append(h);
+for(const m of s.orbitals){const b=el('button');b.append(lab(m.label));b.dataset.k=s.label+':'+m.m;b.setAttribute('aria-pressed','false');b.onclick=()=>pick(a,s,m);r.append(b)}box.append(r)}
+document.querySelectorAll('#pt button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.z===a.Z));pick(a,null,null)}
+function buildTable(){const pt=$('#pt');
+for(const a of atoms){const Z=a.Z,row=Z<=2?1:Z<=10?2:Z<=18?3:4,col=Z<=2?(Z==1?1:18):Z<=4?Z-2:Z<=10?Z+8:Z<=12?Z-10:Z<=18?Z:Z-18;
+const b=el('button',a.symbol);b.title=`${a.name} (Z = ${Z})`;b.dataset.z=Z;b.style.gridArea=`${row}/${col}`;b.setAttribute('aria-pressed','false');if(a.bio)b.className='bio';
+b.onclick=()=>showAtom(a);pt.append(b)}}
+/* interfaz */
 const sel=$('#sel');
+data=await (await fetch('data/index.json')).json();
+hMax=Math.max(...data.orbitals.map(o=>o.extent_a0));
 for(const n of [...new Set(data.orbitals.map(o=>o.n))]){const row=el('div');row.className='row';row.append(el('b','n='+n));
 for(const o of data.orbitals.filter(o=>o.n===n)){const b=el('button');b.append(lab(o.label));b.dataset.f=o.file;b.setAttribute('aria-pressed','false');
 b.onclick=()=>load(o).catch(e=>fail('No se pudo cargar el orbital.'));row.append(b)}sel.append(row)}
-const tabs=$('#tabs');
-for(const k of Object.keys(TXT)){const b=el('button',k);b.setAttribute('role','tab');b.onclick=()=>{$('#txt').textContent=TXT[k];tabs.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b))};tabs.append(b)}
-tabs.firstChild.click();
+const tabs=$('#tabs'),refresh=()=>{$('#txt').textContent=(mode==='h'?THX:TAX)[tab];tabs.querySelectorAll('button').forEach((x,i)=>x.setAttribute('aria-selected',i===tab))};
+TABS.forEach((k,i)=>{const b=el('button',k);b.setAttribute('role','tab');b.onclick=()=>{tab=i;refresh()};tabs.append(b)});
+async function setMode(m){msg.style.display='none';mode=m;$('#hpanel').hidden=m!=='h';$('#apanel').hidden=m!=='a';
+document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
+if(m==='h')await load(hCur);else{await loadPools();if(!$('#pt').firstChild)buildTable();showAtom(aCur||atoms[5])}refresh()}
+document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m).catch(()=>fail('No se pudieron cargar los datos. Ejecuta: python -m orbitae.atoms --out web/data')));
 let drag=null;
 cv.onpointerdown=e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
 cv.onpointermove=e=>{if(!drag)return;yaw+=(e.clientX-drag[0])*.008;pitch=Math.max(-1.5,Math.min(1.5,pitch+(e.clientY-drag[1])*.008));drag=[e.clientX,e.clientY]};
@@ -128,7 +178,8 @@ gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.enableVertexAttribArray(ap);gl.vertexAttrib
 gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.enableVertexAttribArray(as);gl.vertexAttribPointer(as,1,gl.UNSIGNED_BYTE,false,0,0);
 gl.drawArrays(gl.POINTS,0,Math.min(+$('#cnt').value,cur.count))}
 requestAnimationFrame(frame)}
-await load(data.orbitals.find(o=>o.label==='2p_x')||data.orbitals[0]);
+hCur=data.orbitals.find(o=>o.label==='2p_x')||data.orbitals[0];
+await load(hCur);refresh();
 frame();
 }catch(e){fail(e.message==='datos'||e instanceof TypeError||e instanceof SyntaxError
 ?'No se pudieron cargar los datos. Genera los datos y sirve la carpeta web/ con: python3 -m http.server -d web 8000 y abre http://localhost:8000':e.message)}
