@@ -6,7 +6,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 [![tests](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml/badge.svg)](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml)
 **Demo en línea:** https://amurlaniakea.github.io/orbitae/
 
-![Orbitae: orbital 3d del hierro](docs/img/orbitae-hierro.png)
+![Visor de Orbitae](docs/img/orbitae-visor.png)
 
 > Herramienta educativa y científica. No es un dispositivo médico ni una guía clínica.
 
