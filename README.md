@@ -104,8 +104,8 @@ energía; las densidades de las subcapas suman la densidad total, y eso está co
 | Cu 4s | 3,313 | 4,200 | +26,8 % |
 | Kr 4p | 1,950 | 1,884 | −3,4 % |
 
-El modelo de Slater coloca las subcapas 3d y 4s demasiado lejos del núcleo (entre un 27 % y un 56 % en el hierro) y las 2p y 3p
-demasiado cerca (entre un 6 % y un 12 %).
+El modelo de Slater coloca demasiado lejos del núcleo las subcapas 3d (entre un 35 % y un 108 % de Sc a Zn) y 4s (entre un
+24 % y un 44 % de K a Zn), y demasiado cerca las 2p y 3p (entre un 6 % y un 12 %).
 
 > **Corrección (v0.7).** Las versiones 0.5 a 0.6.1 dieron para Mn, Fe, Co y Ni un error del radio medio mayor del real (Fe +25,1 %
 > en lugar de +18,9 %). HF sin restricciones converge en esos cuatro átomos a la configuración 3d⁽ⁿ⁺¹⁾ 4s¹ y no a 3d⁽ⁿ⁾ 4s², que es la
