@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.4)
+# SDD Orbitae (v0.5)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -26,7 +26,7 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF3 Alternar nube total y orbital individual. HECHO (v0.4).
 - RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
 - RF5 Iones cambiando la ocupación: pendiente.
-- RF6 Comparación con Hartree-Fock (PySCF) y moléculas pequeñas: pendiente.
+- RF6 Comparación con Hartree-Fock (PySCF): HECHO (v0.5). Moléculas pequeñas: pendiente.
 - RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento).
 - RF8 Exportar imagen, datos y formato .cube: pendiente.
 
@@ -48,7 +48,8 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 - Nodos radiales contra valores analíticos; radio de corte contra forma cerrada (1s).
 - Muestreo contra momentos analíticos (hidrógeno y orbitales de Slater).
 - Reglas de Slater contra valores de referencia y configuraciones de Z = 1 a 36.
-- Pendiente: orbitales de Slater frente a PySCF con error documentado.
+- Radio medio y densidad radial del modelo de Slater frente a UHF/def2-TZVP (PySCF), con el error
+  documentado en el README y mostrado en el visor.
 
 ## 8. Hoja de ruta
 | Versión | Entrega | Estado |
@@ -57,8 +58,8 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 | v0.2 | Exportador y visor web WebGL, Pages, CI | hecho |
 | v0.3 | Orbitales f (n = 4) y distribución radial con nodos | hecho |
 | v0.4 | Átomos 1-36 con Slater, tabla periódica, nube total | hecho |
-| v0.5 | Comparación con PySCF: error de la aproximación de Slater | siguiente |
-| v0.6 | Iones y módulo Biología y medicina ampliado | |
+| v0.5 | Comparación con PySCF: error de la aproximación de Slater | hecho |
+| v0.6 | Iones y módulo Biología y medicina ampliado | siguiente |
 | v0.7 | Moléculas pequeñas, exportación .cube, DOI en Zenodo | |
 
 ## 9. Riesgos
