@@ -1,4 +1,4 @@
-# SDD Orbitae (borrador v0.1)
+# SDD Orbitae (v0.4)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -8,56 +8,59 @@ electrónica de átomos, iones y moléculas sencillas, con validación numérica
 y contenido por nivel de lectura (estudiante, medicina y enfermería, investigador).
 
 ## 2. Posicionamiento
-Ya existen herramientas que generan orbitales (por ejemplo atorvi, que exporta a formato
-XSF, y atomictools). Orbitae no compite en volumen de funciones sino en tres ejes:
-1. Validación numérica pública y reproducible de cada resultado.
+Ya existen herramientas que generan orbitales (por ejemplo atorvi, que exporta a formato XSF, y
+atomictools). Orbitae no compite en volumen de funciones sino en tres ejes:
+1. Validación numérica pública y reproducible de cada resultado, incluido el error de sus aproximaciones.
 2. Contenido didáctico por nivel, en español e inglés.
 3. Puente hacia biología y medicina (iones, metales, isótopos, moléculas pequeñas).
 
 ## 3. Alcance y límites
 Herramienta educativa. No ofrece uso clínico, diagnóstico ni dosificación.
-Los orbitales atómicos tienen poca aplicación clínica directa; el valor médico viene de
-iones fisiológicos (Na+, K+, Ca2+, Mg2+, Cl-), metales en biología (Fe, Zn, Cu),
-isótopos de medicina nuclear y moléculas pequeñas.
+Los orbitales atómicos tienen poca aplicación clínica directa; el valor médico viene de iones
+fisiológicos (Na+, K+, Ca2+, Mg2+, Cl-), metales en biología (Fe, Zn, Cu), isótopos de medicina
+nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia interfaz.
 
 ## 4. Requisitos funcionales
-- RF1 Orbitales hidrogenoides reales y complejos (n, l, m).
-- RF2 Átomos 1-36 con orbitales tipo Slater tabulados y densidad total.
-- RF3 Alternar orbital individual, valencia y densidad total.
-- RF4 Fases en dos colores, isosuperficies 90/95 %, curva de transferencia ajustable.
-- RF5 Iones cambiando la ocupación.
-- RF6 Moléculas pequeñas con PySCF.
-- RF7 Fichas de contenido por elemento en tres niveles de lectura (ES/EN).
-- RF8 Exportar imagen, datos y formato .cube.
+- RF1 Orbitales hidrogenoides reales y complejos (n, l, m), hasta n = 4. HECHO (v0.1, v0.3).
+- RF2 Átomos 1-36 con reglas de Slater y orbitales tipo Slater; nube total y orbitales. HECHO (v0.4).
+- RF3 Alternar nube total y orbital individual. HECHO (v0.4).
+- RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
+- RF5 Iones cambiando la ocupación: pendiente.
+- RF6 Comparación con Hartree-Fock (PySCF) y moléculas pequeñas: pendiente.
+- RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento).
+- RF8 Exportar imagen, datos y formato .cube: pendiente.
 
 ## 5. Requisitos no funcionales
-Reproducibilidad (versiones fijadas), accesibilidad (daltonismo, contraste), ES/EN,
-AGPL-3.0-or-later, atribución "Pedro Sordo Martínez", cada tabla de datos con fuente
-y licencia documentadas.
+Reproducibilidad (semillas fijas, versiones probadas en CI), accesibilidad (daltonismo, contraste),
+ES/EN, AGPL-3.0-or-later, atribución "Pedro Sordo Martínez", y cada fuente de datos con su licencia.
+Visor sin dependencias de terceros y con política CSP restrictiva.
 
 ## 6. Arquitectura
-core (Python) -> validation -> export (volúmenes precalculados) -> web estática (Three.js)
-
-Decisión: precalcular en Python y servir como sitio estático; sin backend.
-Módulos: core/, validation/, data/, export/, web/, content/, docs/.
+core (Python) -> export (reservas y perfiles precalculados) -> web estática (WebGL puro)
+Átomos: el visor combina una reserva angular (direcciones y signo) con una reserva radial
+(Gamma) mediante r = g / (2 zeta); no se guarda una nube por orbital.
+Despliegue: GitHub Pages desde web/ con integración continua.
 
 ## 7. Criterios de aceptación (validación)
-- Normalización radial y angular dentro de tolerancia.
-- Ortogonalidad radial y angular.
+- Normalización y ortogonalidad radial y angular.
 - Ecuación de Schrödinger radial y energías E_n = -Z^2/(2 n^2) hartree.
-- Radio de corte contra forma cerrada (1s).
-- Muestreo contra momentos analíticos (<r> = 1.5 en 1s; <x^2>/<r^2> = 3/5 en p_x).
-- Más adelante: orbitales STO frente a PySCF con error documentado.
+- Armónicos reales s, p, d, f contra sus formas cartesianas.
+- Nodos radiales contra valores analíticos; radio de corte contra forma cerrada (1s).
+- Muestreo contra momentos analíticos (hidrógeno y orbitales de Slater).
+- Reglas de Slater contra valores de referencia y configuraciones de Z = 1 a 36.
+- Pendiente: orbitales de Slater frente a PySCF con error documentado.
 
 ## 8. Hoja de ruta
-| Versión | Entrega |
-|---|---|
-| v0.1 | Hidrógeno exacto, orbitales reales, muestreo, validación (hecho: 20 pruebas) |
-| v0.2 | Visor web básico y átomos 1-36 con STO |
-| v0.3 | Iones y módulo Biología y medicina |
-| v0.4 | Moléculas pequeñas con PySCF |
-| v0.5 | Exportación .cube, modo investigador, DOI en Zenodo |
+| Versión | Entrega | Estado |
+|---|---|---|
+| v0.1 | Hidrógeno exacto, armónicos reales, muestreo y validación | hecho |
+| v0.2 | Exportador y visor web WebGL, Pages, CI | hecho |
+| v0.3 | Orbitales f (n = 4) y distribución radial con nodos | hecho |
+| v0.4 | Átomos 1-36 con Slater, tabla periódica, nube total | hecho |
+| v0.5 | Comparación con PySCF: error de la aproximación de Slater | siguiente |
+| v0.6 | Iones y módulo Biología y medicina ampliado | |
+| v0.7 | Moléculas pequeñas, exportación .cube, DOI en Zenodo | |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,
-saltar a DFT demasiado pronto.
+presentar una aproximación como si fuera exacta, saltar a DFT demasiado pronto.
