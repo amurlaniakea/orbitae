@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.5)
+# SDD Orbitae (v0.6)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -25,7 +25,7 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF2 Átomos 1-36 con reglas de Slater y orbitales tipo Slater; nube total y orbitales. HECHO (v0.4).
 - RF3 Alternar nube total y orbital individual. HECHO (v0.4).
 - RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
-- RF5 Iones cambiando la ocupación: pendiente.
+- RF5 Iones de interés biomédico con comparación frente a HF: HECHO (v0.6).
 - RF6 Comparación con Hartree-Fock (PySCF): HECHO (v0.5). Moléculas pequeñas: pendiente.
 - RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento).
 - RF8 Exportar imagen, datos y formato .cube: pendiente.
@@ -59,8 +59,9 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 | v0.3 | Orbitales f (n = 4) y distribución radial con nodos | hecho |
 | v0.4 | Átomos 1-36 con Slater, tabla periódica, nube total | hecho |
 | v0.5 | Comparación con PySCF: error de la aproximación de Slater | hecho |
-| v0.6 | Iones y módulo Biología y medicina ampliado | siguiente |
-| v0.7 | Moléculas pequeñas, exportación .cube, DOI en Zenodo | |
+| v0.6 | Iones (Na⁺, K⁺, Ca²⁺, Fe²⁺/Fe³⁺…) con comparación frente a HF | hecho |
+| v0.7 | Orbitales de valencia frente a HF y mejora del modelo | siguiente |
+| v0.8 | Moléculas pequeñas, exportación .cube, DOI en Zenodo | |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,

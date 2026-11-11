@@ -52,6 +52,25 @@ BIO = {
     34: "Forma parte de las selenoproteínas, como la glutatión peroxidasa.",
 }
 _SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+_REMOVAL = [(4, 1), (4, 0), (3, 2), (3, 1), (3, 0), (2, 1), (2, 0), (1, 0)]  # orden de pérdida
+IONS = [(3, 1), (11, 1), (19, 1), (12, 2), (20, 2), (9, -1), (17, -1), (25, 2), (26, 2),
+        (26, 3), (27, 3), (29, 1), (29, 2), (30, 2)]
+ION_BIO = {
+    (3, 1): "El carbonato de litio se usa como estabilizador del ánimo; el Li⁺ es un ion pequeño que se comporta de forma parecida al Na⁺ y al Mg²⁺.",
+    (11, 1): "Principal catión extracelular; su gradiente con el K⁺ genera el potencial de membrana y arrastra agua.",
+    (19, 1): "Principal catión intracelular; fija el potencial de reposo y su concentración en sangre afecta al ritmo cardíaco.",
+    (12, 2): "Se une al ATP (el sustrato de muchas enzimas es el complejo Mg-ATP) y es cofactor de cientos de enzimas.",
+    (20, 2): "Señal intracelular que dispara la contracción muscular y la liberación de neurotransmisores; también coagulación y hueso.",
+    (9, -1): "El fluoruro se incorpora al esmalte dental como fluorapatita y lo hace más resistente a los ácidos.",
+    (17, -1): "Principal anión extracelular; acompaña al Na⁺ y participa en el equilibrio ácido-base y en el ácido clorhídrico gástrico.",
+    (25, 2): "Cofactor de enzimas como la arginasa; la superóxido dismutasa mitocondrial alterna Mn³⁺ y Mn²⁺.",
+    (26, 2): "Estado del hierro en el grupo hemo de la hemoglobina que une y transporta O₂.",
+    (26, 3): "El hierro oxidado no une O₂: en la metahemoglobina el hemo tiene Fe³⁺. También es la forma que transporta la transferrina.",
+    (27, 3): "Forma habitual del cobalto en la vitamina B12 (cobalamina), en el centro del anillo de corrina.",
+    (29, 1): "Forma reducida del cobre; alterna con Cu²⁺ en proteínas redox como la citocromo c oxidasa.",
+    (29, 2): "Forma oxidada del cobre; la superóxido dismutasa Cu/Zn alterna Cu²⁺ y Cu⁺.",
+    (30, 2): "Con la subcapa 3d completa no hace redox: actúa como ácido de Lewis en la anhidrasa carbónica y estructura las proteínas de dedos de zinc.",
+}
 
 
 def configuration(Z: int) -> dict:
@@ -69,6 +88,32 @@ def configuration(Z: int) -> dict:
     if Z == 29:
         occ[(4, 0)], occ[(3, 2)] = 1, 10
     return dict(sorted(occ.items()))
+
+
+def ion_configuration(Z: int, charge: int) -> dict:
+    """Ocupación de un ion. Los cationes pierden primero 4p y 4s y luego 3d, 3p...
+    (Fe2+ es 3d6, no 3d4 4s2); los aniones ocupan el siguiente hueco del orden aufbau."""
+    occ = dict(configuration(Z))
+    for _ in range(max(charge, 0)):
+        k = next((k for k in _REMOVAL if occ.get(k, 0) > 0), None)
+        if k is None:
+            raise ValueError("Carga mayor que el número de electrones")
+        occ[k] -= 1
+        if occ[k] == 0:
+            del occ[k]
+    for _ in range(max(-charge, 0)):
+        k = next((k for k in _ORDER if occ.get(k, 0) < _CAP[k[1]]), None)
+        if k is None:
+            raise ValueError("No hay hueco para más electrones")
+        occ[k] = occ.get(k, 0) + 1
+    return dict(sorted(occ.items()))
+
+
+def ion_symbol(symbol: str, charge: int) -> str:
+    if charge == 0:
+        return symbol
+    mag = "" if abs(charge) == 1 else str(abs(charge)).translate(_SUP)
+    return f"{symbol}{mag}{'⁺' if charge > 0 else '⁻'}"
 
 
 def config_string(occ: dict) -> str:
@@ -110,8 +155,8 @@ def _pdf(r, nstar, zeta):
     return _gamma.pdf(r, a=2.0 * nstar + 1.0, scale=1.0 / (2.0 * zeta))
 
 
-def atom_record(Z: int, npts: int = 160) -> dict:
-    occ = configuration(Z)
+def atom_record(Z: int, charge: int = 0, npts: int = 160) -> dict:
+    occ = ion_configuration(Z, charge)
     subs = []
     for (n, l), o in occ.items():
         zeff = slater_zeff(Z, occ, n, l)
@@ -128,9 +173,12 @@ def atom_record(Z: int, npts: int = 160) -> dict:
     shells = {s["label"]: s["occ"] * _pdf(r, s["nstar"], s["zeta"]) for s in subs}
     total = sum(shells.values())
     top = total.max()
+    ref = ext if charge == 0 else max(s["extent_a0"] for s in atom_record(Z, 0, npts)["subshells"])
     return {
-        "Z": Z, "symbol": SYMBOLS[Z - 1], "name": NAMES[Z - 1], "config": config_string(occ),
-        "subshells": subs, "extent_a0": ext, "bio": BIO.get(Z),
+        "Z": Z, "key": str(Z) if charge == 0 else f"{Z}{charge:+d}", "charge": charge,
+        "electrons": Z - charge, "symbol": ion_symbol(SYMBOLS[Z - 1], charge), "name": NAMES[Z - 1],
+        "config": config_string(occ), "subshells": subs, "extent_a0": ext, "ref_extent_a0": ref,
+        "bio": ION_BIO.get((Z, charge)) if charge else BIO.get(Z),
         "radial": {
             "r": np.round(r, 5).tolist(), "total": np.round(total / top, 4).tolist(),
             "shells": {k: np.round(v / top, 4).tolist() for k, v in shells.items()},
@@ -174,11 +222,12 @@ def main(argv=None):
         (out / f).write_bytes(g.astype("<f4").tobytes())
         rad.append({"n": n, "file": f})
     atoms = [atom_record(Z) for Z in range(1, 37)]
+    ions = [atom_record(Z, q) for Z, q in IONS]
     (out / "atoms.json").write_text(
-        json.dumps({"pools": {"n": a.points, "ang": ang, "rad": rad}, "atoms": atoms}, ensure_ascii=False),
+        json.dumps({"pools": {"n": a.points, "ang": ang, "rad": rad}, "atoms": atoms, "ions": ions}, ensure_ascii=False),
         encoding="utf-8",
     )
-    print(f"{len(atoms)} átomos exportados en {out}")
+    print(f"{len(atoms)} átomos y {len(ions)} iones exportados en {out}")
 
 
 if __name__ == "__main__":

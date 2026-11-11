@@ -19,6 +19,8 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
   cada subcapa, con carga efectiva de las reglas de Slater y orbitales tipo Slater.
 - **Contexto biomédico**: los elementos esenciales en biología humana van marcados y llevan una
   frase de relevancia (hierro en la hemoglobina, sodio y potasio en el potencial de membrana, etc.).
+- **Iones de interés biomédico** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, entre otros),
+  con su comparación frente a Hartree-Fock.
 - **Visor WebGL puro**, sin librerías de terceros y con política CSP que solo permite conectar con
   su propio servidor.
 
@@ -27,7 +29,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 - Los átomos usan una **aproximación didáctica**: reglas de Slater y orbitales sin nodos radiales,
   sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
   frente a Hartree-Fock está medido (ver más abajo).
-- Todavía no hay iones ni moléculas. Ver la hoja de ruta.
+- Todavía no hay moléculas ni orbitales de valencia comparados con HF. Ver la hoja de ruta.
 - Las pruebas automáticas cubren el núcleo en Python. El visor se comprueba a mano en el navegador.
 
 ## Instalación y uso
@@ -85,11 +87,32 @@ El modelo funciona bien en los primeros periodos y falla en los metales de trans
 (hasta +26 % en Mn). La tabla de los 36 elementos se genera con
 `python -m orbitae.hf_compare` y el visor la muestra sobre la gráfica radial.
 
+### Iones
+
+Misma métrica y mismo método de referencia (UHF; base def2-TZVPD, con funciones difusas, para los iones).
+Los cationes se encogen y los aniones se hinchan respecto al átomo neutro tanto en HF como en el modelo de Slater.
+
+| Ion | Radio medio HF (a₀) | Radio medio Slater (a₀) | Diferencia |
+|---|---|---|---|
+| Li⁺ | 0,572 | 0,556 | −2,9 % |
+| Na⁺ | 0,663 | 0,612 | −7,6 % |
+| K⁺ | 0,788 | 0,761 | −3,4 % |
+| Mg²⁺ | 0,573 | 0,535 | −6,6 % |
+| Ca²⁺ | 0,708 | 0,682 | −3,7 % |
+| F⁻ | 0,996 | 0,859 | −13,8 % |
+| Cl⁻ | 1,049 | 0,995 | −5,2 % |
+| Mn²⁺ | 0,647 | 0,762 | +17,8 % |
+| Fe²⁺ | 0,633 | 0,738 | +16,7 % |
+| Fe³⁺ | 0,592 | 0,678 | +14,6 % |
+| Co³⁺ | 0,580 | 0,662 | +14,1 % |
+| Cu⁺ | 0,629 | 0,708 | +12,5 % |
+| Cu²⁺ | 0,588 | 0,666 | +13,1 % |
+| Zn²⁺ | 0,574 | 0,643 | +12,0 % |
+
 ## Hoja de ruta
 
-Ver `docs/SDD.md`. Siguiente: comparar también orbitales de valencia y ampliar la referencia;
-después iones, moléculas pequeñas y exportación `.cube`.
+Ver `docs/SDD.md`. Siguiente: orbitales de valencia frente a HF; después moléculas pequeñas y exportación `.cube`.
 
-## Licencia
+## Licencia y contacto
 
-Copyright (C) Pedro Sordo Martínez. AGPL-3.0-or-later (ver `LICENSE`).
+Copyright (C) Pedro Sordo Martínez <amurlaniakea@gmail.com>. AGPL-3.0-or-later (ver `LICENSE`).
