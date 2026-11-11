@@ -49,6 +49,7 @@ def test_main_writes_profile(tmp_path):
     assert set(idx["atoms"]) == {"1", "2"}
     he = idx["atoms"]["2"]
     assert len(he["hf_total"]) == 160 and max(he["hf_total"]) > 0.5
+    assert len(he["subshells"]["1s"]["hf_curve"]) == 160
 
 
 @pytest.mark.parametrize("Z,q,ref,tol", [(3, 1, -7.2364, 0.01), (11, 1, -161.677, 0.03), (9, -1, -99.4594, 0.03)])
@@ -77,3 +78,34 @@ def test_main_includes_ions(tmp_path):
     main(["--out", str(tmp_path), "--atoms", "11"])
     idx = json.loads((tmp_path / "hf_compare.json").read_text(encoding="utf-8"))
     assert len(idx["atoms"]) == 15 and "11+1" in idx["atoms"] and "17-1" in idx["atoms"]
+
+
+@pytest.mark.parametrize("Z,q", [(25, 0), (26, 0), (28, 0), (6, 0), (36, 0), (26, 2), (17, -1)])
+def test_hf_state_has_the_models_configuration(Z, q):
+    rec = compare_atom(Z, q)
+    assert rec["config_matches"] and rec["min_l_purity"] > 0.99
+
+
+def test_hydrogen_subshell_radius():
+    s = compare_atom(1)["subshells"]["1s"]
+    assert s["mean_r_hf_a0"] == pytest.approx(1.5, abs=0.01)
+    assert s["mean_r_sto_a0"] == pytest.approx(1.5)
+
+
+def test_forcing_the_configuration_lowers_the_fe_error():
+    # HF libre converge a 3d7 4s1 en el Fe y daría +25 %; con 3d6 4s2 forzado el error es menor.
+    assert 15.0 < compare_atom(26)["mean_r_error_pct"] < 22.0
+
+
+def test_valence_subshell_errors_have_known_signs():
+    assert compare_atom(11)["subshells"]["3s"]["error_pct"] > 5.0
+    assert compare_atom(6)["subshells"]["2p"]["error_pct"] < -5.0
+    fe = compare_atom(26)["subshells"]
+    assert fe["4s"]["error_pct"] > 15.0 and fe["3d"]["error_pct"] > 15.0
+
+
+def test_subshell_curves_add_up_to_the_total_density():
+    for Z in (6, 26):
+        rec = compare_atom(Z)
+        total = np.sum([v["hf_curve"] for v in rec["subshells"].values()], axis=0)
+        assert np.allclose(total, rec["hf_total"], atol=3e-3)

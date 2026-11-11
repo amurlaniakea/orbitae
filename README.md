@@ -4,6 +4,7 @@
 exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cada resultado.
 
 [![tests](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml/badge.svg)](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24135885.svg)](https://doi.org/10.5281/zenodo.24135885)
 **Demo en línea:** https://amurlaniakea.github.io/orbitae/
 
 ![Visor de Orbitae](docs/img/orbitae-visor.png)
@@ -29,7 +30,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 - Los átomos usan una **aproximación didáctica**: reglas de Slater y orbitales sin nodos radiales,
   sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
   frente a Hartree-Fock está medido (ver más abajo).
-- Todavía no hay moléculas ni orbitales de valencia comparados con HF. Ver la hoja de ruta.
+- Todavía no hay moléculas. Ver la hoja de ruta.
 - Las pruebas automáticas cubren el núcleo en Python. El visor se comprueba a mano en el navegador.
 
 ## Instalación y uso
@@ -79,13 +80,37 @@ así que tampoco es el valor exacto.
 | Ne | 0,788 | 0,715 | −9,4 % |
 | Na | 0,987 | 0,990 | +0,4 % |
 | Ar | 0,892 | 0,861 | −3,5 % |
-| Fe | 0,800 | 1,000 | +25,1 % |
+| Fe | 0,841 | 1,000 | +18,9 % |
 | Cu | 0,726 | 0,828 | +14,1 % |
 | Kr | 0,729 | 0,746 | +2,4 % |
 
 El modelo funciona bien en los primeros periodos y falla en los metales de transición 3d
-(hasta +26 % en Mn). La tabla de los 36 elementos se genera con
+(hasta +24 % en el Cr). La tabla de los 36 elementos se genera con
 `python -m orbitae.hf_compare` y el visor la muestra sobre la gráfica radial.
+
+### Subcapas de valencia
+
+Mismo método, pero comparando el radio medio de cada subcapa (los orbitales de HF se clasifican por l y por
+energía; las densidades de las subcapas suman la densidad total, y eso está comprobado en las pruebas).
+
+| Subcapa | Radio medio HF (a₀) | Radio medio Slater (a₀) | Diferencia |
+|---|---|---|---|
+| C 2p | 1,701 | 1,538 | −9,5 % |
+| Na 3s | 4,215 | 4,773 | +13,2 % |
+| Cl 3p | 1,839 | 1,721 | −6,4 % |
+| Fe 3d | 1,075 | 1,680 | +56,2 % |
+| Fe 4s | 3,255 | 4,144 | +27,3 % |
+| Cu 3d | 0,993 | 1,338 | +34,7 % |
+| Cu 4s | 3,313 | 4,200 | +26,8 % |
+| Kr 4p | 1,950 | 1,884 | −3,4 % |
+
+El modelo de Slater coloca las subcapas 3d y 4s demasiado lejos del núcleo (entre un 27 % y un 56 % en el hierro) y las 2p y 3p
+demasiado cerca (entre un 6 % y un 12 %).
+
+> **Corrección (v0.7).** Las versiones 0.5 a 0.6.1 dieron para Mn, Fe, Co y Ni un error del radio medio mayor del real (Fe +25,1 %
+> en lugar de +18,9 %). HF sin restricciones converge en esos cuatro átomos a la configuración 3d⁽ⁿ⁺¹⁾ 4s¹ y no a 3d⁽ⁿ⁾ 4s², que es la
+> que usa el modelo, y la comparación mezclaba ambos efectos. Desde la v0.7 se fuerza en HF la misma ocupación por subcapa y hay
+> una prueba que lo verifica en cada cambio. Los registros anteriores de Zenodo conservan los valores antiguos.
 
 ### Iones
 
@@ -111,7 +136,11 @@ Los cationes se encogen y los aniones se hinchan respecto al átomo neutro tanto
 
 ## Hoja de ruta
 
-Ver `docs/SDD.md`. Siguiente: orbitales de valencia frente a HF; después moléculas pequeñas y exportación `.cube`.
+Ver `docs/SDD.md`. Siguiente: moléculas pequeñas y exportación `.cube`.
+
+## Cómo citar
+
+Usa el botón **Cite this repository** de GitHub (a partir de `CITATION.cff`) o el DOI de Zenodo: https://doi.org/10.5281/zenodo.24135885
 
 ## Licencia y contacto
 
