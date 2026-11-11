@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "Si usas Orbitae en tu trabajo, cítalo con estos metadatos."
+title: "Orbitae"
+type: software
+authors:
+  - family-names: "Sordo Martínez"
+    given-names: "Pedro"
+    email: "amurlaniakea@gmail.com"
+version: "0.6.1"
+date-released: "2026-11-11"
+license: AGPL-3.0-or-later
+repository-code: "https://github.com/amurlaniakea/orbitae"
+url: "https://amurlaniakea.github.io/orbitae/"
+abstract: "Orbitales atómicos con rigor verificable: orbitales hidrogenoides exactos, átomos 1-36 con reglas de Slater, iones de interés biomédico y comparación cuantificada frente a Hartree-Fock (PySCF), con visor WebGL y suite de pruebas numéricas. Herramienta educativa y científica, no clínica."
+keywords:
+  - atomic orbitals
+  - quantum chemistry
+  - electron density
+  - Slater rules
+  - Hartree-Fock
+  - scientific education
