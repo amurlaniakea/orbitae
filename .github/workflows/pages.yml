@@ -1,8 +1,15 @@
 name: pages
+# Genera los datos del visor, ejecuta su prueba funcional y solo entonces publica en GitHub Pages.
+# Los datos (web/data) ya no se guardan en git: se regeneran en cada despliegue.
 on:
   push:
     branches: [main]
-    paths: ["web/**", ".github/workflows/pages.yml"]
+    paths:
+      - "web/**"
+      - "src/**"
+      - "tests/viewer/**"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,15 +19,37 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar Orbitae con PySCF
+        run: pip install -e ".[hf]"
+      - name: Generar los datos del visor
+        run: |
+          python -m orbitae.export --out web/data
+          python -m orbitae.atoms --out web/data
+          python -m orbitae.hf_compare --out web/data
+          python -m orbitae.molecules --out web/data
+      - name: Prueba funcional del visor (jsdom)
+        run: |
+          npm ci --prefix tests/viewer
+          node tests/viewer/viewer.test.js
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: web
       - id: deploy
         uses: actions/deploy-pages@v4

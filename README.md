@@ -32,7 +32,8 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
   sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
   frente a Hartree-Fock está medido (ver más abajo).
 - Las moléculas usan HF restringido con geometrías fijas y solo capa cerrada; faltan las de espín (O₂, NO).
-- Las pruebas automáticas cubren el núcleo en Python. El visor se comprueba a mano en el navegador.
+- Las pruebas automáticas cubren el núcleo en Python y la lógica del visor (en un navegador simulado, sin WebGL real);
+  el dibujo 3D se comprueba a mano.
 
 ## Instalación y uso
 
@@ -52,6 +53,10 @@ Para ejecutar el visor en local:
     python3 -m http.server -d web 8000
 
 Abre http://localhost:8000.
+
+Los datos del visor (`web/data`) **no se guardan en git**: se generan con esos comandos y la integración continua los
+regenera en cada despliegue. Antes de publicar se ejecuta una prueba funcional del visor en un navegador simulado
+(`npm ci --prefix tests/viewer && node tests/viewer/viewer.test.js`; requiere Node 22 o superior).
 
 Ejemplo en Python:
 

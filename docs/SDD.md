@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.8)
+# SDD Orbitae (v0.8.1)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -39,7 +39,8 @@ Visor sin dependencias de terceros y con política CSP restrictiva.
 core (Python) -> export (reservas y perfiles precalculados) -> web estática (WebGL puro)
 Átomos: el visor combina una reserva angular (direcciones y signo) con una reserva radial
 (Gamma) mediante r = g / (2 zeta); no se guarda una nube por orbital.
-Despliegue: GitHub Pages desde web/ con integración continua.
+Despliegue: GitHub Pages desde web/. Los datos del visor se generan en la CI (no se versionan) y una prueba funcional
+del visor en jsdom debe pasar antes de publicar.
 
 ## 7. Criterios de aceptación (validación)
 - Normalización y ortogonalidad radial y angular.
@@ -51,6 +52,7 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 - Radio medio y densidad radial del modelo de Slater frente a UHF/def2-TZVP (PySCF), con el error
   documentado en el README y mostrado en el visor.
 - Subcapas de HF con la misma ocupación que el modelo (comprobado en pruebas) y error por subcapa.
+- Visor: prueba funcional en jsdom (modos, tabla periódica, iones, moléculas) antes de cada despliegue.
 - Moléculas: energías HF frente a referencia, normalización y ortogonalidad de los orbitales de valencia, degeneración de los niveles,
   plano nodal del HOMO del agua, HOMO del CO en el carbono y lectura de un .cube exportado.
 
@@ -65,6 +67,7 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 | v0.6 | Iones (Na⁺, K⁺, Ca²⁺, Fe²⁺/Fe³⁺…) con comparación frente a HF | hecho |
 | v0.7 | Subcapas frente a HF y corrección de la referencia (ocupación forzada) | hecho |
 | v0.8 | Moléculas pequeñas de capa cerrada y exportación .cube | hecho |
+| v0.8.1 | Datos generados en la CI y prueba funcional del visor | hecho |
 | v0.9 | Moléculas con espín (O₂, NO) y más biomoléculas pequeñas | siguiente |
 
 ## 9. Riesgos
