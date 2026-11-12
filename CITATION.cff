@@ -6,7 +6,7 @@ authors:
   - family-names: "Sordo Martínez"
     given-names: "Pedro"
     email: "amurlaniakea@gmail.com"
-version: "0.8.0"
+version: "0.8.1"
 date-released: "2026-11-11"
 license: AGPL-3.0-or-later
 repository-code: "https://github.com/amurlaniakea/orbitae"

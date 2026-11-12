@@ -19,4 +19,4 @@ __all__ = [
     "radial_cutoff",
     "sample_orbital",
 ]
-__version__ = "0.8.0"
+__version__ = "0.8.1"
