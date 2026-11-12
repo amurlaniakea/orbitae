@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.7)
+# SDD Orbitae (v0.8)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -26,9 +26,9 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF3 Alternar nube total y orbital individual. HECHO (v0.4).
 - RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
 - RF5 Iones de interés biomédico con comparación frente a HF: HECHO (v0.6).
-- RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas: pendiente.
+- RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas de capa cerrada: HECHO (v0.8).
 - RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento).
-- RF8 Exportar imagen, datos y formato .cube: pendiente.
+- RF8 Exportar orbitales en formato .cube: HECHO para moléculas (v0.8); imagen y datos de átomos: pendiente.
 
 ## 5. Requisitos no funcionales
 Reproducibilidad (semillas fijas, versiones probadas en CI), accesibilidad (daltonismo, contraste),
@@ -51,6 +51,8 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 - Radio medio y densidad radial del modelo de Slater frente a UHF/def2-TZVP (PySCF), con el error
   documentado en el README y mostrado en el visor.
 - Subcapas de HF con la misma ocupación que el modelo (comprobado en pruebas) y error por subcapa.
+- Moléculas: energías HF frente a referencia, normalización y ortogonalidad de los orbitales de valencia, degeneración de los niveles,
+  plano nodal del HOMO del agua, HOMO del CO en el carbono y lectura de un .cube exportado.
 
 ## 8. Hoja de ruta
 | Versión | Entrega | Estado |
@@ -62,8 +64,9 @@ Despliegue: GitHub Pages desde web/ con integración continua.
 | v0.5 | Comparación con PySCF: error de la aproximación de Slater | hecho |
 | v0.6 | Iones (Na⁺, K⁺, Ca²⁺, Fe²⁺/Fe³⁺…) con comparación frente a HF | hecho |
 | v0.7 | Subcapas frente a HF y corrección de la referencia (ocupación forzada) | hecho |
-| v0.8 | Moléculas pequeñas y exportación .cube | siguiente |
+| v0.8 | Moléculas pequeñas de capa cerrada y exportación .cube | hecho |
+| v0.9 | Moléculas con espín (O₂, NO) y más biomoléculas pequeñas | siguiente |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,
-presentar una aproximación como si fuera exacta, saltar a DFT demasiado pronto, comparar contra un estado de referencia distinto del modelado (corregido en v0.7).
+presentar una aproximación como si fuera exacta, saltar a DFT demasiado pronto, comparar contra un estado de referencia distinto del modelado (corregido en v0.7), presentar los orbitales virtuales de HF como estados excitados.

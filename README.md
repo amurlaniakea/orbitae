@@ -22,6 +22,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
   frase de relevancia (hierro en la hemoglobina, sodio y potasio en el potencial de membrana, etc.).
 - **Iones de interés biomédico** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, entre otros),
   con su comparación frente a Hartree-Fock.
+- **Moléculas pequeñas** (H₂O, NH₃, CO, N₂, CO₂) con orbitales moleculares de Hartree-Fock y exportación `.cube`.
 - **Visor WebGL puro**, sin librerías de terceros y con política CSP que solo permite conectar con
   su propio servidor.
 
@@ -30,7 +31,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 - Los átomos usan una **aproximación didáctica**: reglas de Slater y orbitales sin nodos radiales,
   sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
   frente a Hartree-Fock está medido (ver más abajo).
-- Todavía no hay moléculas. Ver la hoja de ruta.
+- Las moléculas usan HF restringido con geometrías fijas y solo capa cerrada; faltan las de espín (O₂, NO).
 - Las pruebas automáticas cubren el núcleo en Python. El visor se comprueba a mano en el navegador.
 
 ## Instalación y uso
@@ -47,6 +48,7 @@ Para ejecutar el visor en local:
     python -m orbitae.export --out web/data
     python -m orbitae.atoms --out web/data
     python -m orbitae.hf_compare --out web/data   # opcional, requiere PySCF
+    python -m orbitae.molecules --out web/data    # moléculas, requiere PySCF
     python3 -m http.server -d web 8000
 
 Abre http://localhost:8000.
@@ -134,9 +136,31 @@ Los cationes se encogen y los aniones se hinchan respecto al átomo neutro tanto
 | Cu²⁺ | 0,588 | 0,666 | +13,1 % |
 | Zn²⁺ | 0,574 | 0,643 | +12,0 % |
 
+## Moléculas
+
+Hartree-Fock restringido (PySCF), base def2-TZVP y geometrías experimentales aproximadas fijas, sin optimizar. Solo moléculas de capa cerrada: H₂O, NH₃, CO, N₂ y CO₂. El visor muestra los orbitales moleculares de valencia ocupados y el LUMO (los orbitales internos no se resuelven en la rejilla de 0,2 bohr). Los orbitales virtuales de HF no describen estados excitados.
+
+| Molécula | Energía HF (Eh) | Referencia HF (Eh) | Dipolo HF (D) | Dipolo experimental (D) |
+|---|---|---|---|---|
+| H₂O | −76,0590 | −76,0675 | 2,16 | 1,855 |
+| NH₃ | −56,2183 | −56,2252 | 1,76 | 1,471 |
+| CO | −112,7855 | −112,7909 | 0,26 | 0,122 |
+| N₂ | −108,9881 | −108,9964 | 0,00 | 0,000 |
+| CO₂ | −187,7159 | −187,7248 | 0,00 | 0,000 |
+
+Las energías quedan a menos de 0,01 Eh de los valores de HF de referencia, y HF sobrestima los dipolos, como es habitual.
+Un ejemplo con interés biomédico: el HOMO del CO es un par solitario σ concentrado en el carbono (el 88 % de su densidad queda del lado
+del carbono), el orbital con el que el CO se une al hierro del grupo hemo.
+
+### Exportar orbitales a `.cube`
+
+    python -m orbitae.molecules --cube CO --orbital HOMO --cube-out CO_HOMO.cube
+
+El formato `.cube` se puede abrir con VMD, Avogadro o PyMOL. Las pruebas comprueban que el archivo se vuelve a leer y normaliza.
+
 ## Hoja de ruta
 
-Ver `docs/SDD.md`. Siguiente: moléculas pequeñas y exportación `.cube`.
+Ver `docs/SDD.md`. Siguiente: moléculas con espín (O₂, NO) y más biomoléculas pequeñas.
 
 ## Cómo citar
 

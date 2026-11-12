@@ -37,9 +37,10 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 <body>
 <aside>
 <h1>Orbitae</h1><p class="sub">Orbitales atómicos con rigor verificable</p>
-<div class="row" id="modes"><button data-m="h" aria-pressed="true">Hidrógeno exacto</button><button data-m="a" aria-pressed="false">Átomos e iones (Slater)</button></div>
+<div class="row" id="modes"><button data-m="h" aria-pressed="true">Hidrógeno exacto</button><button data-m="a" aria-pressed="false">Átomos e iones (Slater)</button><button data-m="m" aria-pressed="false">Moléculas (HF)</button></div>
 <div id="hpanel"><h2>Orbital (hidrógeno, Z = 1)</h2><div id="sel"></div></div>
 <div id="apanel" hidden><h2>Tabla periódica</h2><div id="pt"></div><p class="note">Borde verde: elemento esencial en la biología humana.</p><h2>Iones de interés biomédico</h2><div class="row" id="ions"></div><h2>Qué mostrar</h2><div id="asel"></div></div>
+<div id="mpanel" hidden><h2>Molécula</h2><div id="mols" class="row"></div><h2>Orbital molecular</h2><div id="msel"></div><p class="note" id="mnote"></p></div>
 <h2>Vista</h2>
 <label>Puntos <input id="cnt" type="range" min="2000" max="30000" step="1000" value="20000"></label>
 <label>Tamaño <input id="siz" type="range" min="1" max="8" step="0.5" value="3"></label>
@@ -47,9 +48,9 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 <label><span>Escala común (tamaños reales)</span><input id="com" type="checkbox"></label>
 <label><span>Rotación automática</span><input id="rot" type="checkbox" checked></label>
 <h2>Datos</h2><dl id="info"></dl><p id="bio" class="note"></p>
-<h2>Distribución radial</h2>
+<div id="radsec"><h2>Distribución radial</h2>
 <canvas id="rad" width="300" height="140" aria-label="Probabilidad en función de la distancia al núcleo"></canvas>
-<p class="note" id="radnote"></p>
+<p class="note" id="radnote"></p></div>
 <h2>Qué estás viendo</h2>
 <div class="row" role="tablist" id="tabs"></div><p id="txt"></p>
 <p class="note">Herramienta educativa y científica, no clínica. Arrastra para girar; rueda para acercar. Cada punto es una posición posible del electrón.</p>
@@ -60,6 +61,11 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:1
 const $=s=>document.querySelector(s),el=(t,x)=>{const e=document.createElement(t);if(x!=null)e.textContent=x;return e};
 const cv=$('#c'),msg=$('#msg'),fail=t=>{msg.textContent=t;msg.style.display='grid'};
 const TABS=['Estudiante','Medicina y enfermería','Investigador'];
+const TMX=[
+"En una molécula los electrones ya no pertenecen a un solo átomo: ocupan orbitales moleculares repartidos por toda la molécula. Los dos colores son el signo de la función de onda (la fase). Un orbital enlazante concentra densidad entre los núcleos; uno antienlazante tiene un plano nodal entre ellos. Los orbitales de capa interna, que casi no cambian respecto al átomo, no se muestran. Los círculos de color son los núcleos.",
+"El agua, el CO₂, el amoníaco, el N₂ y el CO aparecen en la fisiología (el agua y el CO₂ en el metabolismo, el amoníaco en el ciclo de la urea, el N₂ es el gas más abundante del aire). El monóxido de carbono es tóxico porque su HOMO, un par solitario sobre el carbono, se une al hierro del grupo hemo y compite con el O₂ en la hemoglobina. Material educativo, no clínico.",
+"Hartree-Fock restringido (PySCF), base def2-TZVP y geometrías experimentales aproximadas fijas, sin optimizar. Los puntos se muestrean de ψ² sobre una rejilla de 0,2 bohr y el signo es el de ψ en cada punto; los orbitales de valencia ocupados normalizan a 1 en la rejilla con un error cercano al 1 %. Los orbitales virtuales (LUMO) de HF no describen estados excitados y se muestran solo como referencia. Las pruebas comprueban energías frente a HF de referencia, la degeneración de los niveles, el plano nodal del HOMO del agua, que el HOMO del CO está en el carbono y la lectura de un archivo .cube exportado."];
+
 const THX=[
 "Cada punto es un lugar donde podría estar el electrón: donde hay más puntos, es más probable encontrarlo. No es una órbita como la de un planeta, es una nube de probabilidad. n da el tamaño, l la forma (s esfera, p mancuerna, d trébol, f formas más complejas) y m la orientación. Los dos colores son el signo de la función de onda (la fase); la probabilidad depende de su cuadrado, no del signo. La gráfica radial muestra por qué hay capas: la probabilidad sube y baja con la distancia, y los nodos son esferas donde vale cero.",
 "Esta es la nube de un solo electrón (hidrógeno), la base para entender la química del cuerpo. La forma de los orbitales ayuda a entender por qué los enlaces tienen orientaciones concretas, como en el agua, y por qué metales como el hierro, que usan orbitales d, pueden unir oxígeno en la hemoglobina. Prueba el modo Átomos para ver otros elementos. Material educativo, no clínico.",
@@ -78,18 +84,18 @@ void main(){vec3 q=u_r*(vec3(p.x,p.z,-p.y)*u_e);q.z-=u_d;
 gl_Position=vec4(q.x*u_f/u_a,q.y*u_f,q.z*0.01,-q.z);
 gl_PointSize=u_sz*u_d/(-q.z);
 v=u_two>0.5?(s>0.5?c1:c0):c2;}`;
-const FS=`precision mediump float;varying vec3 v;
-void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.;if(r>1.)discard;gl_FragColor=vec4(v,.3*(1.-r));}`;
+const FS=`precision mediump float;varying vec3 v;uniform float u_al;
+void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.;if(r>1.)discard;gl_FragColor=vec4(v,u_al*(1.-r));}`;
 const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o};
 const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);
 if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error('Error al enlazar los shaders.');
 gl.useProgram(pr);
 const U=n=>gl.getUniformLocation(pr,n),A=n=>gl.getAttribLocation(pr,n);
-const uni=Object.fromEntries(['u_r','u_e','u_d','u_f','u_a','u_sz','u_two'].map(n=>[n,U(n)]));
+const uni=Object.fromEntries(['u_r','u_e','u_d','u_f','u_a','u_sz','u_two','u_al'].map(n=>[n,U(n)]));
 gl.uniform3f(U('c0'),.35,.62,1);gl.uniform3f(U('c1'),1,.38,.32);gl.uniform3f(U('c2'),.98,.82,.5);
 gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.clearColor(.043,.059,.09,1);
-const bp=gl.createBuffer(),bs=gl.createBuffer(),ap=A('p'),as=A('s');
-let ions=[],hf=null,cur=null,maxExt=1,hMax=1,yaw=.6,pitch=.35,dist=3.2,tok=0,data=null,mode='h',hCur=null,pools=null,atoms=null,aCur=null,tab=0;
+const uc2=U('c2'),ba=gl.createBuffer(),bp=gl.createBuffer(),bs=gl.createBuffer(),ap=A('p'),as=A('s');
+let mdat=null,mcur=null,ions=[],hf=null,cur=null,maxExt=1,hMax=1,yaw=.6,pitch=.35,dist=3.2,tok=0,data=null,mode='h',hCur=null,pools=null,atoms=null,aCur=null,tab=0;
 const A0=0.529177,fmt=(x,d=2)=>x.toLocaleString('es',{maximumFractionDigits:d});
 const lab=l=>{const f=document.createDocumentFragment(),[a,b]=l.split('_');f.append(a);if(b)f.append(el('sub',b));return f};
 const prng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
@@ -147,6 +153,29 @@ for(const a of atoms){const Z=a.Z,row=Z<=2?1:Z<=10?2:Z<=18?3:4,col=Z<=2?(Z==1?1:
 const b=el('button',a.symbol);b.title=`${a.name} (Z = ${Z})`;b.dataset.z=Z;b.style.gridArea=`${row}/${col}`;b.setAttribute('aria-pressed','false');if(a.bio)b.className='bio';
 b.onclick=()=>showAtom(a);pt.append(b)}
 for(const a of ions){const b=el('button',a.symbol);b.title=`${a.name}, ${a.config}`;b.dataset.k=a.key;b.setAttribute('aria-pressed','false');b.onclick=()=>showAtom(a);$('#ions').append(b)}}
+/* moléculas */
+const COL={H:[.95,.95,.95,13],C:[.62,.62,.62,22],N:[.35,.5,1,21],O:[1,.3,.3,20]};
+async function loadMols(){if(mdat)return;mdat=(await (await fetch('data/molecules.json')).json()).molecules;
+const box=$('#mols');for(const m of mdat){const b=el('button',m.formula);b.title=m.name;b.dataset.k=m.key;b.setAttribute('aria-pressed','false');
+b.onclick=()=>showMol(m).catch(()=>fail('No se pudieron cargar los datos de la molécula.'));box.append(b)}}
+async function pickMO(m,o){const t=++tok,r=await fetch('data/'+o.file);if(!r.ok)throw new Error('datos');
+const b=await r.arrayBuffer();if(t!==tok)return;const N=o.count;maxExt=m.extent_a0;
+upload(new Int16Array(b,0,3*N),new Uint8Array(b,6*N,N),N,m.extent_a0);
+rows([['Molécula',`${m.name} (${m.formula})`],['Orbital',o.label],['Energía orbital',fmt(o.energy_ev)+' eV'],['Energía HF total',fmt(m.energy_hf,4)+' Eh'],
+['Dipolo HF / experimental',`${fmt(m.dipole_hf_debye)} / ${fmt(m.dipole_exp_debye)} D`],['Base',m.basis]]);
+$('#bio').textContent='Relevancia biomédica: '+m.bio;
+$('#mnote').textContent=(o.note?o.note+' ':'')+(o.occupied?'':'Los orbitales virtuales de HF no describen estados excitados: se muestran solo como referencia.');
+document.querySelectorAll('#msel button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===o.file))}
+async function showMol(m){mcur=m;
+const q=new Int16Array(3*m.atoms.length);m.atoms.forEach((a,i)=>a.xyz_a0.forEach((v,k)=>{q[3*i+k]=Math.round(v/m.extent_a0*32767)}));
+gl.bindBuffer(gl.ARRAY_BUFFER,ba);gl.bufferData(gl.ARRAY_BUFFER,q,gl.STATIC_DRAW);
+m.acol=m.atoms.map(a=>COL[a.symbol]||[.8,.8,.8,18]);
+document.querySelectorAll('#mols button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===m.key));
+const box=$('#msel');box.replaceChildren();
+for(const [t,occ] of [['Ocupados',true],['Virtual',false]]){const r=el('div');r.className='row';r.append(el('b',t));
+for(const o of m.orbitals.filter(o=>o.occupied===occ)){const b=el('button',o.label);b.dataset.k=o.file;b.setAttribute('aria-pressed','false');
+b.onclick=()=>pickMO(m,o).catch(()=>fail('No se pudo cargar el orbital.'));r.append(b)}box.append(r)}
+return pickMO(m,m.orbitals[0])}
 /* interfaz */
 const sel=$('#sel');
 data=await (await fetch('data/index.json')).json();
@@ -154,11 +183,11 @@ hMax=Math.max(...data.orbitals.map(o=>o.extent_a0));
 for(const n of [...new Set(data.orbitals.map(o=>o.n))]){const row=el('div');row.className='row';row.append(el('b','n='+n));
 for(const o of data.orbitals.filter(o=>o.n===n)){const b=el('button');b.append(lab(o.label));b.dataset.f=o.file;b.setAttribute('aria-pressed','false');
 b.onclick=()=>load(o).catch(e=>fail('No se pudo cargar el orbital.'));row.append(b)}sel.append(row)}
-const tabs=$('#tabs'),refresh=()=>{$('#txt').textContent=(mode==='h'?THX:TAX)[tab];tabs.querySelectorAll('button').forEach((x,i)=>x.setAttribute('aria-selected',i===tab))};
+const tabs=$('#tabs'),refresh=()=>{$('#txt').textContent=(mode==='h'?THX:mode==='m'?TMX:TAX)[tab];tabs.querySelectorAll('button').forEach((x,i)=>x.setAttribute('aria-selected',i===tab))};
 TABS.forEach((k,i)=>{const b=el('button',k);b.setAttribute('role','tab');b.onclick=()=>{tab=i;refresh()};tabs.append(b)});
-async function setMode(m){msg.style.display='none';mode=m;$('#hpanel').hidden=m!=='h';$('#apanel').hidden=m!=='a';
+async function setMode(m){msg.style.display='none';mode=m;$('#hpanel').hidden=m!=='h';$('#apanel').hidden=m!=='a';$('#mpanel').hidden=m!=='m';$('#radsec').hidden=m==='m';
 document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
-if(m==='h')await load(hCur);else{await loadPools();if(!$('#pt').firstChild)buildTable();showAtom(aCur||atoms[5])}refresh()}
+if(m==='h')await load(hCur);else if(m==='m'){await loadMols();await showMol(mcur||mdat[0])}else{await loadPools();if(!$('#pt').firstChild)buildTable();showAtom(aCur||atoms[5])}refresh()}
 document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m).catch(()=>fail('No se pudieron cargar los datos. Ejecuta: python -m orbitae.atoms --out web/data')));
 let drag=null;
 cv.onpointerdown=e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
@@ -177,7 +206,7 @@ gl.uniform1f(uni.u_f,2.414*Math.min(1,a));gl.uniform1f(uni.u_a,a);gl.uniform1f(u
 gl.uniform1f(uni.u_two,$('#two').checked?1:0);
 gl.bindBuffer(gl.ARRAY_BUFFER,bp);gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.SHORT,true,0,0);
 gl.bindBuffer(gl.ARRAY_BUFFER,bs);gl.enableVertexAttribArray(as);gl.vertexAttribPointer(as,1,gl.UNSIGNED_BYTE,false,0,0);
-gl.drawArrays(gl.POINTS,0,Math.min(+$('#cnt').value,cur.count))}
+gl.uniform3f(uc2,.98,.82,.5);gl.uniform1f(uni.u_al,.3);gl.drawArrays(gl.POINTS,0,Math.min(+$('#cnt').value,cur.count));if(mode==='m'&&mcur&&mcur.acol){gl.uniform1f(uni.u_al,.9);gl.uniform1f(uni.u_two,0);gl.bindBuffer(gl.ARRAY_BUFFER,ba);gl.vertexAttribPointer(ap,3,gl.SHORT,true,0,0);mcur.acol.forEach((c,i)=>{gl.uniform3f(uc2,c[0],c[1],c[2]);gl.uniform1f(uni.u_sz,c[3]*dpr);gl.drawArrays(gl.POINTS,i,1)})}}
 requestAnimationFrame(frame)}
 hCur=data.orbitals.find(o=>o.label==='2p_x')||data.orbitals[0];
 await load(hCur);refresh();
