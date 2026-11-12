@@ -1,176 +1,178 @@
 # Orbitae
 
-**Orbitales atómicos con rigor verificable.** Visualiza nubes electrónicas en 3D, del hidrógeno
-exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cada resultado.
+**Atomic orbitals with verifiable rigor.** Visualize electron clouds in 3D, from exact hydrogen to atoms 1-36,
+biomedically relevant ions and small molecules, backed by a numerical test suite that checks every result.
 
 [![tests](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml/badge.svg)](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24135885.svg)](https://doi.org/10.5281/zenodo.24135885)
-**Demo en línea:** https://amurlaniakea.github.io/orbitae/
+**Live demo:** https://amurlaniakea.github.io/orbitae/ (the interface is currently in Spanish; an English interface is planned)
 
-![Visor de Orbitae](docs/img/orbitae-visor.png)
+[Versión en español](README.es.md)
 
-> Herramienta educativa y científica. No es un dispositivo médico ni una guía clínica.
+![Orbitae viewer](docs/img/orbitae-visor.png)
 
-## Qué hace
+> Educational and scientific tool. It is not a medical device nor a clinical guide.
 
-- **Hidrógeno exacto** (modo "Hidrógeno exacto"): orbitales hasta n = 4 (s, p, d, f) con armónicos
-  esféricos **reales** (p_x, d_xy, ...), fase en dos colores, energía, radio del 95 % y
-  distribución radial con sus nodos.
-- **Átomos 1-36** (modo "Átomos"): tabla periódica clicable, nube total y orbitales individuales de
-  cada subcapa, con carga efectiva de las reglas de Slater y orbitales tipo Slater.
-- **Contexto biomédico**: los elementos esenciales en biología humana van marcados y llevan una
-  frase de relevancia (hierro en la hemoglobina, sodio y potasio en el potencial de membrana, etc.).
-- **Iones de interés biomédico** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, entre otros),
-  con su comparación frente a Hartree-Fock.
-- **Moléculas pequeñas** (H₂O, NH₃, CO, N₂, CO₂) con orbitales moleculares de Hartree-Fock y exportación `.cube`.
-- **Visor WebGL puro**, sin librerías de terceros y con política CSP que solo permite conectar con
-  su propio servidor.
+## What it does
 
-## Límites (a propósito, explícitos)
+- **Exact hydrogen** ("Hidrógeno exacto" mode): orbitals up to n = 4 (s, p, d, f) with **real** spherical harmonics
+  (p_x, d_xy, ...), two-color phase, energy, 95 % radius and radial distribution with its nodes.
+- **Atoms 1-36** ("Átomos" mode): clickable periodic table, total cloud and individual orbitals of every subshell,
+  using Slater's rules for the effective charge and Slater-type orbitals.
+- **Biomedical context**: elements essential to human biology are marked and carry a short note (iron in hemoglobin,
+  sodium and potassium in the membrane potential, and so on).
+- **Biomedically relevant ions** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, among others), compared
+  against Hartree-Fock.
+- **Small molecules** (H₂O, NH₃, CO, N₂, CO₂) with Hartree-Fock molecular orbitals and `.cube` export.
+- **Pure WebGL viewer**, with no third-party libraries and a CSP that only allows connections to its own server.
 
-- Los átomos usan una **aproximación didáctica**: reglas de Slater y orbitales sin nodos radiales,
-  sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
-  frente a Hartree-Fock está medido (ver más abajo).
-- Las moléculas usan HF restringido con geometrías fijas y solo capa cerrada; faltan las de espín (O₂, NO).
-- Las pruebas automáticas cubren el núcleo en Python y la lógica del visor (en un navegador simulado, sin WebGL real);
-  el dibujo 3D se comprueba a mano.
+## Limits (explicit on purpose)
 
-## Instalación y uso
+- Atoms use a **didactic approximation**: Slater's rules and orbitals without radial nodes, no electron correlation.
+  The total cloud is the spherical average of the subshells. The error against Hartree-Fock is measured (see below).
+- Molecules use restricted Hartree-Fock with fixed experimental geometries and closed shells only; molecules with
+  spin (O₂, NO) are missing. Virtual orbitals (LUMO) of HF are a reference only, not excited states.
+- Ions are free gas-phase ions: in water or inside a protein they change through hydration and ligands.
+- Automated tests cover the Python core and the logic of the viewer (in a simulated browser, without real WebGL);
+  the 3D drawing is checked by hand.
+
+## Install and use
 
     python3 -m venv .venv && source .venv/bin/activate
     pip install -e ".[dev,hf]"
     pytest -q
 
-Requiere Python 3.10 o superior (probado en 3.10, 3.11 y 3.12) y SciPy 1.15 o superior. PySCF es opcional (`.[hf]`) y solo hace falta para la comparación con
-Hartree-Fock.
+Requires Python 3.10 or later (tested on 3.10, 3.11 and 3.12) and SciPy 1.15 or later. PySCF is optional (`.[hf]`)
+and only needed for the Hartree-Fock comparison and for molecules.
 
-Para ejecutar el visor en local:
+To run the viewer locally:
 
     python -m orbitae.export --out web/data
     python -m orbitae.atoms --out web/data
-    python -m orbitae.hf_compare --out web/data   # opcional, requiere PySCF
-    python -m orbitae.molecules --out web/data    # moléculas, requiere PySCF
+    python -m orbitae.hf_compare --out web/data   # optional, needs PySCF
+    python -m orbitae.molecules --out web/data    # molecules, needs PySCF
     python3 -m http.server -d web 8000
 
-Abre http://localhost:8000.
+Open http://localhost:8000.
 
-Los datos del visor (`web/data`) **no se guardan en git**: se generan con esos comandos y la integración continua los
-regenera en cada despliegue. Antes de publicar se ejecuta una prueba funcional del visor en un navegador simulado
-(`npm ci --prefix tests/viewer && node tests/viewer/viewer.test.js`; requiere Node 22 o superior).
+The viewer data (`web/data`) is **not stored in git**: it is generated by those commands and continuous integration
+regenerates it on every deployment. A functional test of the viewer runs in a simulated browser before publishing
+(`npm ci --prefix tests/viewer && node tests/viewer/viewer.test.js`; needs Node 22 or later).
 
-Ejemplo en Python:
+Example in Python:
 
     from orbitae import sample_orbital, radial_cutoff
 
-    puntos = sample_orbital(n=2, l=1, m=1, size=50_000, seed=0)   # 2p_x, forma (N, 3)
-    r95 = radial_cutoff(2, 1, p=0.95)                              # radio en bohr (a0)
+    points = sample_orbital(n=2, l=1, m=1, size=50_000, seed=0)   # 2p_x, shape (N, 3)
+    r95 = radial_cutoff(2, 1, p=0.95)                              # radius in bohr (a0)
 
-## Validación
+## Validation
 
-Cada resultado numérico tiene una prueba: normalización radial y angular, ortogonalidad, ecuación
-de Schrödinger radial, energías E_n = -Z²/(2n²), forma de los armónicos s, p, d y f contra sus
-fórmulas cartesianas, nodos radiales contra valores analíticos (2s y 3s), muestreo contra
-momentos exactos, cargas efectivas de Slater contra valores de referencia y configuraciones
-electrónicas de los 36 elementos. La integración continua las ejecuta en cada cambio.
+Every numerical result has a test: radial and angular normalization, orthogonality, the radial Schrödinger equation,
+energies E_n = −Z²/(2n²), the s, p, d and f harmonics against their Cartesian formulas, radial nodes against analytical
+values (2s and 3s), sampling against exact moments, Slater effective charges against reference values, the electron
+configurations of the 36 elements, Hartree-Fock energies against reference values, molecular-orbital normalization and
+degeneracy, and the re-reading of an exported `.cube` file. Continuous integration runs them on every change.
 
-## Error del modelo de Slater frente a Hartree-Fock
+## Error of the Slater model against Hartree-Fock
 
-Referencia: Hartree-Fock no restringido con PySCF (base def2-TZVP, espín de Hund, densidad
-promediada esféricamente). La métrica es el **radio medio de la densidad electrónica total**
-(todos los electrones; no mide el tamaño de valencia). HF no incluye correlación electrónica,
-así que tampoco es el valor exacto.
+Reference: unrestricted Hartree-Fock with PySCF (def2-TZVP basis, Hund spin, spherically averaged density). The metric
+is the **mean radius of the total electron density** (all electrons; it does not measure valence size). HF includes no
+electron correlation, so it is not the exact value either.
 
-| Elemento | Radio medio HF (a₀) | Radio medio Slater (a₀) | Diferencia |
+| Element | HF mean radius (a₀) | Slater mean radius (a₀) | Difference |
 |---|---|---|---|
-| H | 1,499 | 1,500 | +0,1 % |
-| C | 1,189 | 1,113 | −6,4 % |
-| Ne | 0,788 | 0,715 | −9,4 % |
-| Na | 0,987 | 0,990 | +0,4 % |
-| Ar | 0,892 | 0,861 | −3,5 % |
-| Fe | 0,841 | 1,000 | +18,9 % |
-| Cu | 0,726 | 0,828 | +14,1 % |
-| Kr | 0,729 | 0,746 | +2,4 % |
+| H | 1.499 | 1.500 | +0.1 % |
+| C | 1.189 | 1.113 | −6.4 % |
+| Ne | 0.788 | 0.715 | −9.4 % |
+| Na | 0.987 | 0.990 | +0.4 % |
+| Ar | 0.892 | 0.861 | −3.5 % |
+| Fe | 0.841 | 1.000 | +18.9 % |
+| Cu | 0.726 | 0.828 | +14.1 % |
+| Kr | 0.729 | 0.746 | +2.4 % |
 
-El modelo funciona bien en los primeros periodos y falla en los metales de transición 3d
-(hasta +24 % en el Cr). La tabla de los 36 elementos se genera con
-`python -m orbitae.hf_compare` y el visor la muestra sobre la gráfica radial.
+The model works well in the first periods and fails for the 3d transition metals (up to +24 % for Cr). The table for all
+36 elements is generated with `python -m orbitae.hf_compare` and the viewer shows it over the radial plot.
 
-### Subcapas de valencia
+### Valence subshells
 
-Mismo método, pero comparando el radio medio de cada subcapa (los orbitales de HF se clasifican por l y por
-energía; las densidades de las subcapas suman la densidad total, y eso está comprobado en las pruebas).
+Same method, but comparing the mean radius of each subshell (HF orbitals are classified by l and by energy; the subshell
+densities add up to the total density, which is checked in the tests).
 
-| Subcapa | Radio medio HF (a₀) | Radio medio Slater (a₀) | Diferencia |
+| Subshell | HF mean radius (a₀) | Slater mean radius (a₀) | Difference |
 |---|---|---|---|
-| C 2p | 1,701 | 1,538 | −9,5 % |
-| Na 3s | 4,215 | 4,773 | +13,2 % |
-| Cl 3p | 1,839 | 1,721 | −6,4 % |
-| Fe 3d | 1,075 | 1,680 | +56,2 % |
-| Fe 4s | 3,255 | 4,144 | +27,3 % |
-| Cu 3d | 0,993 | 1,338 | +34,7 % |
-| Cu 4s | 3,313 | 4,200 | +26,8 % |
-| Kr 4p | 1,950 | 1,884 | −3,4 % |
+| C 2p | 1.701 | 1.538 | −9.5 % |
+| Na 3s | 4.215 | 4.773 | +13.2 % |
+| Cl 3p | 1.839 | 1.721 | −6.4 % |
+| Fe 3d | 1.075 | 1.680 | +56.2 % |
+| Fe 4s | 3.255 | 4.144 | +27.3 % |
+| Cu 3d | 0.993 | 1.338 | +34.7 % |
+| Cu 4s | 3.313 | 4.200 | +26.8 % |
+| Kr 4p | 1.950 | 1.884 | −3.4 % |
 
-El modelo de Slater coloca demasiado lejos del núcleo las subcapas 3d (entre un 35 % y un 108 % de Sc a Zn) y 4s (entre un
-24 % y un 44 % de K a Zn), y demasiado cerca las 2p y 3p (entre un 6 % y un 12 %).
+Slater's model places the 3d subshell (between 35 % and 108 % from Sc to Zn) and the 4s subshell (between 24 % and 44 %
+from K to Zn) too far from the nucleus, and the 2p and 3p subshells too close (between 6 % and 12 %).
 
-> **Corrección (v0.7).** Las versiones 0.5 a 0.6.1 dieron para Mn, Fe, Co y Ni un error del radio medio mayor del real (Fe +25,1 %
-> en lugar de +18,9 %). HF sin restricciones converge en esos cuatro átomos a la configuración 3d⁽ⁿ⁺¹⁾ 4s¹ y no a 3d⁽ⁿ⁾ 4s², que es la
-> que usa el modelo, y la comparación mezclaba ambos efectos. Desde la v0.7 se fuerza en HF la misma ocupación por subcapa y hay
-> una prueba que lo verifica en cada cambio. Los registros anteriores de Zenodo conservan los valores antiguos.
+> **Correction (v0.7).** Versions 0.5 to 0.6.1 reported, for Mn, Fe, Co and Ni, a larger error of the mean radius than the
+> real one (Fe +25.1 % instead of +18.9 %). Unrestricted HF converges in those four atoms to the 3d⁽ⁿ⁺¹⁾ 4s¹ configuration
+> rather than 3d⁽ⁿ⁾ 4s², which is the one the model uses, so the comparison mixed both effects. Since v0.7 the same
+> subshell occupation is enforced in HF and a test verifies it on every change. Earlier Zenodo records keep the old values.
 
-### Iones
+### Ions
 
-Misma métrica y mismo método de referencia (UHF; base def2-TZVPD, con funciones difusas, para los iones).
-Los cationes se encogen y los aniones se hinchan respecto al átomo neutro tanto en HF como en el modelo de Slater.
+Same metric and reference method (UHF; def2-TZVPD basis, with diffuse functions, for the ions). Cations shrink and anions
+swell with respect to the neutral atom in both HF and the Slater model.
 
-| Ion | Radio medio HF (a₀) | Radio medio Slater (a₀) | Diferencia |
+| Ion | HF mean radius (a₀) | Slater mean radius (a₀) | Difference |
 |---|---|---|---|
-| Li⁺ | 0,572 | 0,556 | −2,9 % |
-| Na⁺ | 0,663 | 0,612 | −7,6 % |
-| K⁺ | 0,788 | 0,761 | −3,4 % |
-| Mg²⁺ | 0,573 | 0,535 | −6,6 % |
-| Ca²⁺ | 0,708 | 0,682 | −3,7 % |
-| F⁻ | 0,996 | 0,859 | −13,8 % |
-| Cl⁻ | 1,049 | 0,995 | −5,2 % |
-| Mn²⁺ | 0,647 | 0,762 | +17,8 % |
-| Fe²⁺ | 0,633 | 0,738 | +16,7 % |
-| Fe³⁺ | 0,592 | 0,678 | +14,6 % |
-| Co³⁺ | 0,580 | 0,662 | +14,1 % |
-| Cu⁺ | 0,629 | 0,708 | +12,5 % |
-| Cu²⁺ | 0,588 | 0,666 | +13,1 % |
-| Zn²⁺ | 0,574 | 0,643 | +12,0 % |
+| Li⁺ | 0.572 | 0.556 | −2.9 % |
+| Na⁺ | 0.663 | 0.612 | −7.6 % |
+| K⁺ | 0.788 | 0.761 | −3.4 % |
+| Mg²⁺ | 0.573 | 0.535 | −6.6 % |
+| Ca²⁺ | 0.708 | 0.682 | −3.7 % |
+| F⁻ | 0.996 | 0.859 | −13.8 % |
+| Cl⁻ | 1.049 | 0.995 | −5.2 % |
+| Mn²⁺ | 0.647 | 0.762 | +17.8 % |
+| Fe²⁺ | 0.633 | 0.738 | +16.7 % |
+| Fe³⁺ | 0.592 | 0.678 | +14.6 % |
+| Co³⁺ | 0.580 | 0.662 | +14.1 % |
+| Cu⁺ | 0.629 | 0.708 | +12.5 % |
+| Cu²⁺ | 0.588 | 0.666 | +13.1 % |
+| Zn²⁺ | 0.574 | 0.643 | +12.0 % |
 
-## Moléculas
+## Molecules
 
-Hartree-Fock restringido (PySCF), base def2-TZVP y geometrías experimentales aproximadas fijas, sin optimizar. Solo moléculas de capa cerrada: H₂O, NH₃, CO, N₂ y CO₂. El visor muestra los orbitales moleculares de valencia ocupados y el LUMO (los orbitales internos no se resuelven en la rejilla de 0,2 bohr). Los orbitales virtuales de HF no describen estados excitados.
+Restricted Hartree-Fock (PySCF), def2-TZVP basis and approximate fixed experimental geometries, without optimization.
+Closed-shell molecules only: H₂O, NH₃, CO, N₂ and CO₂. The viewer shows the occupied valence molecular orbitals and the
+LUMO (inner orbitals are not resolved by the 0.2 bohr grid). Virtual HF orbitals do not describe excited states.
 
-| Molécula | Energía HF (Eh) | Referencia HF (Eh) | Dipolo HF (D) | Dipolo experimental (D) |
+| Molecule | HF energy (Eh) | HF reference (Eh) | HF dipole (D) | Experimental dipole (D) |
 |---|---|---|---|---|
-| H₂O | −76,0590 | −76,0675 | 2,16 | 1,855 |
-| NH₃ | −56,2183 | −56,2252 | 1,76 | 1,471 |
-| CO | −112,7855 | −112,7909 | 0,26 | 0,122 |
-| N₂ | −108,9881 | −108,9964 | 0,00 | 0,000 |
-| CO₂ | −187,7159 | −187,7248 | 0,00 | 0,000 |
+| H₂O | −76.0590 | −76.0675 | 2.16 | 1.855 |
+| NH₃ | −56.2183 | −56.2252 | 1.76 | 1.471 |
+| CO | −112.7855 | −112.7909 | 0.26 | 0.122 |
+| N₂ | −108.9881 | −108.9964 | 0.00 | 0.000 |
+| CO₂ | −187.7159 | −187.7248 | 0.00 | 0.000 |
 
-Las energías quedan a menos de 0,01 Eh de los valores de HF de referencia, y HF sobrestima los dipolos, como es habitual.
-Un ejemplo con interés biomédico: el HOMO del CO es un par solitario σ concentrado en el carbono (el 88 % de su densidad queda del lado
-del carbono), el orbital con el que el CO se une al hierro del grupo hemo.
+Energies are within 0.01 Eh of the reference HF values, and HF overestimates the dipoles, as usual. An example with
+biomedical interest: the HOMO of CO is a σ lone pair concentrated on carbon (88 % of its density is on the carbon side),
+the orbital through which CO binds to the iron of the heme group.
 
-### Exportar orbitales a `.cube`
+### Export orbitals to `.cube`
 
     python -m orbitae.molecules --cube CO --orbital HOMO --cube-out CO_HOMO.cube
 
-El formato `.cube` se puede abrir con VMD, Avogadro o PyMOL. Las pruebas comprueban que el archivo se vuelve a leer y normaliza.
+The `.cube` format can be opened with VMD, Avogadro or PyMOL. The tests check that the file is read back and normalized.
 
-## Hoja de ruta
+## How to cite
 
-Ver `docs/SDD.md`. Siguiente: moléculas con espín (O₂, NO) y más biomoléculas pequeñas.
+Use the **Cite this repository** button on GitHub (generated from `CITATION.cff`) or the Zenodo DOI: https://doi.org/10.5281/zenodo.24135885
 
-## Cómo citar
+## Roadmap
 
-Usa el botón **Cite this repository** de GitHub (a partir de `CITATION.cff`) o el DOI de Zenodo: https://doi.org/10.5281/zenodo.24135885
+See `docs/SDD.md` (in Spanish). Next: an English/Spanish viewer interface, molecules with spin (O₂, NO) and more small
+biomolecules.
 
-## Licencia y contacto
+## License and contact
 
-Copyright (C) Pedro Sordo Martínez <amurlaniakea@gmail.com>. AGPL-3.0-or-later (ver `LICENSE`).
+Copyright (C) Pedro Sordo Martínez <amurlaniakea@gmail.com>. AGPL-3.0-or-later (see `LICENSE`).
