@@ -5,7 +5,7 @@ biomedically relevant ions and small molecules, backed by a numerical test suite
 
 [![tests](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml/badge.svg)](https://github.com/amurlaniakea/orbitae/actions/workflows/tests.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24135885.svg)](https://doi.org/10.5281/zenodo.24135885)
-**Live demo:** https://amurlaniakea.github.io/orbitae/ (the interface is currently in Spanish; an English interface is planned)
+**Live demo:** https://amurlaniakea.github.io/orbitae/ (English and Spanish interface, with an ES | EN switch)
 
 [Versión en español](README.es.md)
 
@@ -15,16 +15,16 @@ biomedically relevant ions and small molecules, backed by a numerical test suite
 
 ## What it does
 
-- **Exact hydrogen** ("Hidrógeno exacto" mode): orbitals up to n = 4 (s, p, d, f) with **real** spherical harmonics
+- **Exact hydrogen** mode: orbitals up to n = 4 (s, p, d, f) with **real** spherical harmonics
   (p_x, d_xy, ...), two-color phase, energy, 95 % radius and radial distribution with its nodes.
-- **Atoms 1-36** ("Átomos" mode): clickable periodic table, total cloud and individual orbitals of every subshell,
+- **Atoms 1-36** mode: clickable periodic table, total cloud and individual orbitals of every subshell,
   using Slater's rules for the effective charge and Slater-type orbitals.
 - **Biomedical context**: elements essential to human biology are marked and carry a short note (iron in hemoglobin,
   sodium and potassium in the membrane potential, and so on).
 - **Biomedically relevant ions** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, among others), compared
   against Hartree-Fock.
 - **Small molecules** (H₂O, NH₃, CO, N₂, CO₂) with Hartree-Fock molecular orbitals and `.cube` export.
-- **Pure WebGL viewer**, with no third-party libraries and a CSP that only allows connections to its own server.
+- **Pure WebGL viewer** in English and Spanish, with no third-party libraries and a CSP that only allows connections to its own server.
 
 ## Limits (explicit on purpose)
 
@@ -170,8 +170,7 @@ Use the **Cite this repository** button on GitHub (generated from `CITATION.cff`
 
 ## Roadmap
 
-See `docs/SDD.md` (in Spanish). Next: an English/Spanish viewer interface, molecules with spin (O₂, NO) and more small
-biomolecules.
+See `docs/SDD.md` (in Spanish). Next: molecules with spin (O₂, NO) and more small biomolecules.
 
 ## License and contact
 

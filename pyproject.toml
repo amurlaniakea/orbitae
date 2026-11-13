@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orbitae"
-version = "0.8.1"
+version = "0.9.0"
 description = "Orbitales atómicos hidrogenoides reales, muestreo y validación numérica (educativo y científico)"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -44,6 +44,23 @@ NOTES = {
     ("CO2", "HOMO"): "Par degenerado de orbitales π no enlazantes localizados en los oxígenos.",
 }
 
+INFO_EN = {
+    "H2O": ("Water", "Solvent of life: the bent geometry and the lone pair of oxygen explain the hydrogen bonds of water with itself and with biomolecules."),
+    "NH3": ("Ammonia", "Produced in protein metabolism and eliminated through the urea cycle; the lone pair on nitrogen makes it basic."),
+    "CO": ("Carbon monoxide", "Toxic gas: its σ lone pair on carbon binds to the iron of the heme group with higher affinity than O₂ and reduces oxygen transport by hemoglobin."),
+    "N2": ("Molecular nitrogen", "Main component of air (78 %); almost chemically inert because of its triple bond."),
+    "CO2": ("Carbon dioxide", "End product of cellular metabolism; in blood it is carried mostly as bicarbonate and eliminated by the lungs."),
+}
+NOTES_EN = {
+    ("H2O", "HOMO"): "Lone pair of oxygen perpendicular to the plane of the molecule; the density vanishes in that plane.",
+    ("NH3", "HOMO"): "Lone pair of nitrogen: the one that accepts a proton (NH₃ + H⁺ → NH₄⁺).",
+    ("CO", "HOMO"): "σ lone pair concentrated on carbon: the one that binds to the iron of the heme group.",
+    ("CO", "LUMO"): "Degenerate pair of antibonding π* orbitals; they receive density from the metal (back-donation) when CO binds to iron.",
+    ("N2", "HOMO"): "Degenerate pair of bonding π orbitals: two of the three bonds of the N≡N triple bond.",
+    ("N2", "LUMO"): "Degenerate pair of antibonding π* orbitals.",
+    ("CO2", "HOMO"): "Degenerate pair of nonbonding π orbitals localized on the oxygens.",
+}
+
 
 def geometries() -> dict:
     """Geometrías experimentales aproximadas en angstrom: {clave: [(símbolo, (x, y, z)), ...]}."""
@@ -146,10 +163,12 @@ def export_molecule(key: str, out: Path, points: int = 20000, seed: int = 0) -> 
         s["count"] = points
         (out / s["file"]).write_bytes(np.round(p / extent * 32767).astype("<i2").tobytes() + sign.tobytes())
         s["note"] = NOTES.get((key, s["base_label"]))
+        s["note_en"] = NOTES_EN.get((key, s["base_label"]))
         del s["index"]
     formula, name, bio = INFO[key]
     return {
         "key": key, "formula": formula, "name": name, "bio": bio, "basis": BASIS,
+        "name_en": INFO_EN[key][0], "bio_en": INFO_EN[key][1],
         "energy_hf": float(mf.e_tot), "energy_ref": ENERGY_REF[key],
         "dipole_hf_debye": float(np.linalg.norm(mf.dip_moment(verbose=0))), "dipole_exp_debye": DIPOLE_EXP[key],
         "extent_a0": extent,

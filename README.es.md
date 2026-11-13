@@ -7,7 +7,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24135885.svg)](https://doi.org/10.5281/zenodo.24135885)
 [English version](README.md)
 
-**Demo en línea:** https://amurlaniakea.github.io/orbitae/
+**Demo en línea:** https://amurlaniakea.github.io/orbitae/ (interfaz en español e inglés, con selector ES | EN)
 
 ![Visor de Orbitae](docs/img/orbitae-visor.png)
 

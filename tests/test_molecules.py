@@ -92,6 +92,7 @@ def test_main_writes_data_files(tmp_path):
     assert list(mols) == KEYS and sum(len(m["orbitals"]) for m in mols.values()) == 33
     assert len(mols["H2O"]["atoms"]) == 3 and len(mols["CO2"]["atoms"]) == 3
     for m in mols.values():
-        assert m["extent_a0"] > 0
+        assert m["name_en"] and m["bio_en"] and m["extent_a0"] > 0
+        assert all(bool(o["note"]) == bool(o["note_en"]) for o in m["orbitals"])
         for o in m["orbitals"]:
             assert (tmp_path / o["file"]).stat().st_size == 7 * 300

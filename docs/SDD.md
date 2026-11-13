@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.8.1)
+# SDD Orbitae (v0.9)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -27,7 +27,7 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
 - RF5 Iones de interés biomédico con comparación frente a HF: HECHO (v0.6).
 - RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas de capa cerrada: HECHO (v0.8).
-- RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento).
+- RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento, ya en español e inglés).
 - RF8 Exportar orbitales en formato .cube: HECHO para moléculas (v0.8); imagen y datos de átomos: pendiente.
 
 ## 5. Requisitos no funcionales
@@ -52,7 +52,8 @@ del visor en jsdom debe pasar antes de publicar.
 - Radio medio y densidad radial del modelo de Slater frente a UHF/def2-TZVP (PySCF), con el error
   documentado en el README y mostrado en el visor.
 - Subcapas de HF con la misma ocupación que el modelo (comprobado en pruebas) y error por subcapa.
-- Visor: prueba funcional en jsdom (modos, tabla periódica, iones, moléculas) antes de cada despliegue.
+- Visor: prueba funcional en jsdom (modos, tabla periódica, iones, moléculas, español e inglés) antes de cada despliegue.
+- Textos: todo texto biomédico de elementos, iones y moléculas tiene su versión en inglés (comprobado en pruebas).
 - Moléculas: energías HF frente a referencia, normalización y ortogonalidad de los orbitales de valencia, degeneración de los niveles,
   plano nodal del HOMO del agua, HOMO del CO en el carbono y lectura de un .cube exportado.
 
@@ -68,7 +69,8 @@ del visor en jsdom debe pasar antes de publicar.
 | v0.7 | Subcapas frente a HF y corrección de la referencia (ocupación forzada) | hecho |
 | v0.8 | Moléculas pequeñas de capa cerrada y exportación .cube | hecho |
 | v0.8.1 | Datos generados en la CI y prueba funcional del visor | hecho |
-| v0.9 | Moléculas con espín (O₂, NO) y más biomoléculas pequeñas | siguiente |
+| v0.9 | Interfaz bilingüe ES/EN del visor y textos biomédicos en inglés | hecho |
+| v0.10 | Moléculas con espín (O₂, NO) y más biomoléculas pequeñas | siguiente |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,

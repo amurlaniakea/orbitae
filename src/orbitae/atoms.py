@@ -52,6 +52,45 @@ BIO = {
     34: "Forma parte de las selenoproteínas, como la glutatión peroxidasa.",
 }
 _SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+NAMES_EN = ("Hydrogen Helium Lithium Beryllium Boron Carbon Nitrogen Oxygen Fluorine Neon Sodium Magnesium "
+            "Aluminium Silicon Phosphorus Sulfur Chlorine Argon Potassium Calcium Scandium Titanium Vanadium Chromium "
+            "Manganese Iron Cobalt Nickel Copper Zinc Gallium Germanium Arsenic Selenium Bromine Krypton").split()
+BIO_EN = {
+    1: "With oxygen it forms water and almost all organic chemistry; the H⁺ gradient drives ATP synthesis.",
+    6: "Backbone of all organic chemistry: it forms four stable bonds.",
+    7: "Present in amino acids and in the bases of DNA and RNA.",
+    8: "Final electron acceptor in cellular respiration; O₂ binds to the iron of hemoglobin.",
+    11: "Main extracellular cation; with the Na⁺/K⁺ pump it maintains the membrane potential.",
+    12: "Binds ATP and is a cofactor of hundreds of enzymes.",
+    15: "Part of ATP, DNA, phospholipids and bone.",
+    16: "Present in cysteine and methionine; forms disulfide bridges.",
+    17: "Main extracellular anion; component of gastric hydrochloric acid.",
+    19: "Main intracellular cation; it sets the resting potential and takes part in the heart rhythm.",
+    20: "Muscle contraction, coagulation, cell signaling and bone.",
+    25: "Cofactor of the mitochondrial superoxide dismutase.",
+    26: "Center of hemoglobin and myoglobin: binds and transports O₂.",
+    27: "Center of vitamin B12.",
+    29: "Cofactor of cytochrome c oxidase and of ceruloplasmin.",
+    30: "Cofactor of hundreds of enzymes, such as carbonic anhydrase, and of zinc-finger proteins.",
+    34: "Part of selenoproteins, such as glutathione peroxidase.",
+}
+ION_BIO_EN = {
+    (3, 1): "Lithium carbonate is used as a mood stabilizer; Li⁺ is a small ion that behaves similarly to Na⁺ and Mg²⁺.",
+    (11, 1): "Main extracellular cation; its gradient with K⁺ generates the membrane potential and drives water movement.",
+    (19, 1): "Main intracellular cation; it sets the resting potential and its concentration in blood affects the heart rhythm.",
+    (12, 2): "Binds ATP (the substrate of many enzymes is the Mg-ATP complex) and is a cofactor of hundreds of enzymes.",
+    (20, 2): "Intracellular signal that triggers muscle contraction and neurotransmitter release; also coagulation and bone.",
+    (9, -1): "Fluoride is incorporated into tooth enamel as fluorapatite and makes it more resistant to acids.",
+    (17, -1): "Main extracellular anion; it accompanies Na⁺ and takes part in acid-base balance and in gastric hydrochloric acid.",
+    (25, 2): "Cofactor of enzymes such as arginase; mitochondrial superoxide dismutase alternates between Mn³⁺ and Mn²⁺.",
+    (26, 2): "Oxidation state of the iron in the heme group of hemoglobin that binds and transports O₂.",
+    (26, 3): "Oxidized iron does not bind O₂: in methemoglobin the heme has Fe³⁺. It is also the form carried by transferrin.",
+    (27, 3): "Usual form of cobalt in vitamin B12 (cobalamin), at the center of the corrin ring.",
+    (29, 1): "Reduced form of copper; it alternates with Cu²⁺ in redox proteins such as cytochrome c oxidase.",
+    (29, 2): "Oxidized form of copper; Cu/Zn superoxide dismutase alternates between Cu²⁺ and Cu⁺.",
+    (30, 2): "With the 3d subshell full it does no redox chemistry: it acts as a Lewis acid in carbonic anhydrase and structures zinc-finger proteins.",
+}
+
 _REMOVAL = [(4, 1), (4, 0), (3, 2), (3, 1), (3, 0), (2, 1), (2, 0), (1, 0)]  # orden de pérdida
 IONS = [(3, 1), (11, 1), (19, 1), (12, 2), (20, 2), (9, -1), (17, -1), (25, 2), (26, 2),
         (26, 3), (27, 3), (29, 1), (29, 2), (30, 2)]
@@ -177,8 +216,10 @@ def atom_record(Z: int, charge: int = 0, npts: int = 160) -> dict:
     return {
         "Z": Z, "key": str(Z) if charge == 0 else f"{Z}{charge:+d}", "charge": charge,
         "electrons": Z - charge, "symbol": ion_symbol(SYMBOLS[Z - 1], charge), "name": NAMES[Z - 1],
+        "name_en": NAMES_EN[Z - 1],
         "config": config_string(occ), "subshells": subs, "extent_a0": ext, "ref_extent_a0": ref,
         "bio": ION_BIO.get((Z, charge)) if charge else BIO.get(Z),
+        "bio_en": ION_BIO_EN.get((Z, charge)) if charge else BIO_EN.get(Z),
         "radial": {
             "r": np.round(r, 5).tolist(), "total": np.round(total / top, 4).tolist(),
             "shells": {k: np.round(v / top, 4).tolist() for k, v in shells.items()},
