@@ -23,15 +23,15 @@ biomedically relevant ions and small molecules, backed by a numerical test suite
   sodium and potassium in the membrane potential, and so on).
 - **Biomedically relevant ions** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, among others), compared
   against Hartree-Fock.
-- **Small molecules** (H₂O, NH₃, CO, N₂, CO₂) with Hartree-Fock molecular orbitals and `.cube` export.
+- **Small molecules** (H₂O, NH₃, CO, N₂, CO₂ and the open-shell O₂ and NO) with Hartree-Fock molecular orbitals, spin density and `.cube` export.
 - **Pure WebGL viewer** in English and Spanish, with no third-party libraries and a CSP that only allows connections to its own server.
 
 ## Limits (explicit on purpose)
 
 - Atoms use a **didactic approximation**: Slater's rules and orbitals without radial nodes, no electron correlation.
   The total cloud is the spherical average of the subshells. The error against Hartree-Fock is measured (see below).
-- Molecules use restricted Hartree-Fock with fixed experimental geometries and closed shells only; molecules with
-  spin (O₂, NO) are missing. Virtual orbitals (LUMO) of HF are a reference only, not excited states.
+- Molecules use Hartree-Fock with fixed experimental geometries: restricted for closed shells and unrestricted (UHF) for
+  O₂ and NO, which show some spin contamination (see below). Virtual orbitals (LUMO) of HF are a reference only, not excited states.
 - Ions are free gas-phase ions: in water or inside a protein they change through hydration and ligands.
 - Automated tests cover the Python core and the logic of the viewer (in a simulated browser, without real WebGL);
   the 3D drawing is checked by hand.
@@ -72,7 +72,7 @@ Every numerical result has a test: radial and angular normalization, orthogonali
 energies E_n = −Z²/(2n²), the s, p, d and f harmonics against their Cartesian formulas, radial nodes against analytical
 values (2s and 3s), sampling against exact moments, Slater effective charges against reference values, the electron
 configurations of the 36 elements, Hartree-Fock energies against reference values, molecular-orbital normalization and
-degeneracy, and the re-reading of an exported `.cube` file. Continuous integration runs them on every change.
+degeneracy, spin contamination and spin density of the open-shell molecules, and the re-reading of an exported `.cube` file. Continuous integration runs them on every change.
 
 ## Error of the Slater model against Hartree-Fock
 
@@ -143,7 +143,7 @@ swell with respect to the neutral atom in both HF and the Slater model.
 ## Molecules
 
 Restricted Hartree-Fock (PySCF), def2-TZVP basis and approximate fixed experimental geometries, without optimization.
-Closed-shell molecules only: H₂O, NH₃, CO, N₂ and CO₂. The viewer shows the occupied valence molecular orbitals and the
+Closed-shell molecules (H₂O, NH₃, CO, N₂, CO₂) use restricted HF. The viewer shows the occupied valence molecular orbitals and the
 LUMO (inner orbitals are not resolved by the 0.2 bohr grid). Virtual HF orbitals do not describe excited states.
 
 | Molecule | HF energy (Eh) | HF reference (Eh) | HF dipole (D) | Experimental dipole (D) |
@@ -158,6 +158,17 @@ Energies are within 0.01 Eh of the reference HF values, and HF overestimates the
 biomedical interest: the HOMO of CO is a σ lone pair concentrated on carbon (88 % of its density is on the carbon side),
 the orbital through which CO binds to the iron of the heme group.
 
+### Molecules with spin
+
+O₂ (triplet) and NO (doublet) use unrestricted Hartree-Fock (UHF) with Hund's multiplicity, so the α and β orbitals are different; the viewer shows them separately and also the spin density (ρα − ρβ), colored by sign.
+
+| Molecule | UHF energy (Eh) | ⟨S²⟩ (ideal) | Spin population (Mulliken) | HF dipole (D) | Experimental dipole (D) |
+|---|---|---|---|---|---|
+| O₂ | −149.6832 | 2.046 (2.000) | O 1.00, O 1.00 | 0.00 | 0.000 |
+| NO | −129.3027 | 0.797 (0.750) | N 0.96, O 0.04 | 0.25 | 0.159 |
+
+UHF has some spin contamination (⟨S²⟩ above the ideal value). The UHF of NO converges only by breaking the cylindrical symmetry (the orientation of its π* orbital around the bond axis is arbitrary); that lower-energy solution is used. The two unpaired electrons of O₂ are shared equally between the two oxygens, and the unpaired electron of NO sits mostly on nitrogen.
+
 ### Export orbitals to `.cube`
 
     python -m orbitae.molecules --cube CO --orbital HOMO --cube-out CO_HOMO.cube
@@ -170,7 +181,7 @@ Use the **Cite this repository** button on GitHub (generated from `CITATION.cff`
 
 ## Roadmap
 
-See `docs/SDD.md` (in Spanish). Next: molecules with spin (O₂, NO) and more small biomolecules.
+See `docs/SDD.md` (in Spanish). Next: more small biomolecules and geometry optimization.
 
 ## License and contact
 

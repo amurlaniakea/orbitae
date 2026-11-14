@@ -24,7 +24,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
   frase de relevancia (hierro en la hemoglobina, sodio y potasio en el potencial de membrana, etc.).
 - **Iones de interés biomédico** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, entre otros),
   con su comparación frente a Hartree-Fock.
-- **Moléculas pequeñas** (H₂O, NH₃, CO, N₂, CO₂) con orbitales moleculares de Hartree-Fock y exportación `.cube`.
+- **Moléculas pequeñas** (H₂O, NH₃, CO, N₂, CO₂ y las de espín O₂ y NO) con orbitales moleculares de Hartree-Fock, densidad de espín y exportación `.cube`.
 - **Visor WebGL puro**, sin librerías de terceros y con política CSP que solo permite conectar con
   su propio servidor.
 
@@ -33,7 +33,7 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
 - Los átomos usan una **aproximación didáctica**: reglas de Slater y orbitales sin nodos radiales,
   sin correlación electrónica. La nube total es el promedio esférico de las subcapas. El error
   frente a Hartree-Fock está medido (ver más abajo).
-- Las moléculas usan HF restringido con geometrías fijas y solo capa cerrada; faltan las de espín (O₂, NO).
+- Las moléculas usan HF con geometrías fijas: restringido en capa cerrada y no restringido (UHF) en O₂ y NO, que presentan cierta contaminación de espín (ver abajo).
 - Las pruebas automáticas cubren el núcleo en Python y la lógica del visor (en un navegador simulado, sin WebGL real);
   el dibujo 3D se comprueba a mano.
 
@@ -145,7 +145,7 @@ Los cationes se encogen y los aniones se hinchan respecto al átomo neutro tanto
 
 ## Moléculas
 
-Hartree-Fock restringido (PySCF), base def2-TZVP y geometrías experimentales aproximadas fijas, sin optimizar. Solo moléculas de capa cerrada: H₂O, NH₃, CO, N₂ y CO₂. El visor muestra los orbitales moleculares de valencia ocupados y el LUMO (los orbitales internos no se resuelven en la rejilla de 0,2 bohr). Los orbitales virtuales de HF no describen estados excitados.
+Hartree-Fock restringido (PySCF), base def2-TZVP y geometrías experimentales aproximadas fijas, sin optimizar. Moléculas de capa cerrada (H₂O, NH₃, CO, N₂, CO₂) con HF restringido. El visor muestra los orbitales moleculares de valencia ocupados y el LUMO (los orbitales internos no se resuelven en la rejilla de 0,2 bohr). Los orbitales virtuales de HF no describen estados excitados.
 
 | Molécula | Energía HF (Eh) | Referencia HF (Eh) | Dipolo HF (D) | Dipolo experimental (D) |
 |---|---|---|---|---|
@@ -159,6 +159,17 @@ Las energías quedan a menos de 0,01 Eh de los valores de HF de referencia, y HF
 Un ejemplo con interés biomédico: el HOMO del CO es un par solitario σ concentrado en el carbono (el 88 % de su densidad queda del lado
 del carbono), el orbital con el que el CO se une al hierro del grupo hemo.
 
+### Moléculas con espín
+
+El O₂ (triplete) y el NO (doblete) usan Hartree-Fock no restringido (UHF) con la multiplicidad de Hund, así que los orbitales α y β son distintos; el visor los muestra por separado y además la densidad de espín (ρα − ρβ), coloreada por su signo.
+
+| Molécula | Energía UHF (Eh) | ⟨S²⟩ (ideal) | Población de espín (Mulliken) | Dipolo HF (D) | Dipolo experimental (D) |
+|---|---|---|---|---|---|
+| O₂ | −149,6832 | 2,046 (2,000) | O 1,00, O 1,00 | 0,00 | 0,000 |
+| NO | −129,3027 | 0,797 (0,750) | N 0,96, O 0,04 | 0,25 | 0,159 |
+
+El UHF tiene cierta contaminación de espín (⟨S²⟩ por encima del valor ideal). El UHF del NO solo converge rompiendo la simetría cilíndrica (la orientación de su orbital π* alrededor del eje del enlace es arbitraria); se usa esa solución, de menor energía. Los dos electrones desapareados del O₂ se reparten por igual entre los dos oxígenos, y el del NO está sobre todo en el nitrógeno.
+
 ### Exportar orbitales a `.cube`
 
     python -m orbitae.molecules --cube CO --orbital HOMO --cube-out CO_HOMO.cube
@@ -167,7 +178,7 @@ El formato `.cube` se puede abrir con VMD, Avogadro o PyMOL. Las pruebas comprue
 
 ## Hoja de ruta
 
-Ver `docs/SDD.md`. Siguiente: moléculas con espín (O₂, NO) y más biomoléculas pequeñas.
+Ver `docs/SDD.md`. Siguiente: más biomoléculas pequeñas y optimización de geometría.
 
 ## Cómo citar
 

@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.9)
+# SDD Orbitae (v0.10)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -26,7 +26,7 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF3 Alternar nube total y orbital individual. HECHO (v0.4).
 - RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
 - RF5 Iones de interés biomédico con comparación frente a HF: HECHO (v0.6).
-- RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas de capa cerrada: HECHO (v0.8).
+- RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas, de capa cerrada y con espín (O₂, NO): HECHO (v0.8, v0.10).
 - RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento, ya en español e inglés).
 - RF8 Exportar orbitales en formato .cube: HECHO para moléculas (v0.8); imagen y datos de átomos: pendiente.
 
@@ -56,6 +56,7 @@ del visor en jsdom debe pasar antes de publicar.
 - Textos: todo texto biomédico de elementos, iones y moléculas tiene su versión en inglés (comprobado en pruebas).
 - Moléculas: energías HF frente a referencia, normalización y ortogonalidad de los orbitales de valencia, degeneración de los niveles,
   plano nodal del HOMO del agua, HOMO del CO en el carbono y lectura de un .cube exportado.
+- Moléculas con espín: ⟨S²⟩ frente al valor ideal, integral de la densidad de espín, poblaciones de Mulliken y cubo de la densidad de espín.
 
 ## 8. Hoja de ruta
 | Versión | Entrega | Estado |
@@ -70,8 +71,9 @@ del visor en jsdom debe pasar antes de publicar.
 | v0.8 | Moléculas pequeñas de capa cerrada y exportación .cube | hecho |
 | v0.8.1 | Datos generados en la CI y prueba funcional del visor | hecho |
 | v0.9 | Interfaz bilingüe ES/EN del visor y textos biomédicos en inglés | hecho |
-| v0.10 | Moléculas con espín (O₂, NO) y más biomoléculas pequeñas | siguiente |
+| v0.10 | Moléculas con espín (O₂, NO): UHF, densidad de espín y contaminación de espín | hecho |
+| v0.11 | Más biomoléculas pequeñas y optimización de geometría | siguiente |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,
-presentar una aproximación como si fuera exacta, saltar a DFT demasiado pronto, comparar contra un estado de referencia distinto del modelado (corregido en v0.7), presentar los orbitales virtuales de HF como estados excitados.
+presentar una aproximación como si fuera exacta, saltar a DFT demasiado pronto, comparar contra un estado de referencia distinto del modelado (corregido en v0.7), presentar los orbitales virtuales de HF como estados excitados, presentar la solución UHF de las moléculas con espín sin declarar su contaminación de espín.

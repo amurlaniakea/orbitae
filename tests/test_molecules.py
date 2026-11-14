@@ -8,8 +8,8 @@ import pytest
 pytest.importorskip("pyscf")
 
 from orbitae.molecules import (  # noqa: E402
-    ENERGY_REF, KEYS, export_cube, main, make_grid, orbital_values, read_cube,
-    sample_orbital_points, select_orbitals, solve,
+    ALL_KEYS, ENERGY_REF, KEYS, OPEN_KEYS, SPIN, _spin_density, export_cube, main, make_grid, orbital_coeff,
+    orbital_values, read_cube, sample_orbital_points, select_orbitals, solve,
 )
 
 
@@ -89,10 +89,62 @@ def test_main_writes_data_files(tmp_path):
     main(["--out", str(tmp_path), "--points", "300"])
     idx = json.loads((tmp_path / "molecules.json").read_text(encoding="utf-8"))
     mols = {m["key"]: m for m in idx["molecules"]}
-    assert list(mols) == KEYS and sum(len(m["orbitals"]) for m in mols.values()) == 33
+    assert list(mols) == ALL_KEYS and sum(len(m["orbitals"]) for m in mols.values()) == 63
     assert len(mols["H2O"]["atoms"]) == 3 and len(mols["CO2"]["atoms"]) == 3
     for m in mols.values():
         assert m["name_en"] and m["bio_en"] and m["extent_a0"] > 0
+        assert all(abs(o["norm_grid"] - 1) < 0.04 for o in m["orbitals"] if o["occupied"] and o["norm_grid"])  # error máximo medido: 3,2 % (CO₂)
         assert all(bool(o["note"]) == bool(o["note_en"]) for o in m["orbitals"])
         for o in m["orbitals"]:
             assert (tmp_path / o["file"]).stat().st_size == 7 * 300
+
+
+@pytest.fixture(scope="module")
+def solved_open():
+    return {k: solve(k) for k in OPEN_KEYS}
+
+
+def test_open_shell_scf_quality(solved_open):
+    for key, (mol, mf) in solved_open.items():
+        s2, _ = mf.spin_square()
+        ideal = SPIN[key] / 2 * (SPIN[key] / 2 + 1)
+        assert mf.converged and abs(s2 - ideal) < 0.06  # contaminación de espín moderada
+        assert mol.nelec[0] - mol.nelec[1] == SPIN[key]
+    assert -149.75 < solved_open["O2"][1].e_tot < -149.60
+    assert -129.35 < solved_open["NO"][1].e_tot < -129.25
+
+
+def test_open_shell_orbital_selection(solved_open):
+    o2, no = (select_orbitals(*solved_open[k]) for k in ("O2", "NO"))
+    assert len(o2) == 15 and len(no) == 13
+    count = lambda sel, g: sum(o["group"] == g for o in sel)
+    assert (count(o2, "occ_a"), count(o2, "occ_b")) == (7, 5) and (count(no, "occ_a"), count(no, "occ_b")) == (6, 5)
+    ha = [o["energy_ev"] for o in o2 if o["base_label"] == "α HOMO"]
+    assert len(ha) == 2 and abs(ha[0] - ha[1]) < 1e-6  # el par π* con los dos electrones desapareados
+    assert len([o for o in o2 if o["base_label"] == "β LUMO"]) == 2
+
+
+def test_spin_density_and_populations(solved_open):
+    for key, (mol, mf) in solved_open.items():
+        X, dV = make_grid(mol)
+        assert _spin_density(mol, mf, X).sum() * dV == pytest.approx(SPIN[key], abs=0.02)
+    pop_o2 = solved_open["O2"][1].mulliken_spin_pop(verbose=0)[1]
+    pop_no = solved_open["NO"][1].mulliken_spin_pop(verbose=0)[1]
+    assert np.allclose(pop_o2, [1.0, 1.0], atol=0.05)
+    assert pop_no[0] > 0.6 and pop_no[0] > pop_no[1]  # el electrón desapareado del NO está sobre todo en el N
+
+
+@pytest.mark.parametrize("key", ["O2", "NO"])
+def test_open_shell_valence_orbitals_normalized(solved_open, key):
+    mol, mf = solved_open[key]
+    occ = [o for o in select_orbitals(mol, mf) if o["occupied"]]
+    X, dV = make_grid(mol)
+    P = orbital_values(mol, np.hstack([orbital_coeff(mf, o) for o in occ]), X)
+    assert np.allclose(np.sum(P**2, axis=0) * dV, 1.0, atol=0.03)
+
+
+def test_spin_density_cube_roundtrip(tmp_path):
+    path = tmp_path / "o2_spin.cube"
+    main(["--cube", "O2", "--orbital", "SPIN", "--cube-out", str(path)])
+    natm, dV, vals = read_cube(path)
+    assert natm == 2 and np.sum(vals) * dV == pytest.approx(2.0, abs=0.05)

@@ -101,6 +101,18 @@ const ok = (c, msg) => { console.log((c ? 'OK     ' : 'FALLA  ') + msg); if (!c)
   click('#langs button', (b) => b.dataset.l === 'es'); await sleep(900);
   ok(info().includes('Monóxido') && $('#mnote').textContent.includes('retrodonación') && $('#mnote').textContent.includes('virtuales'), 'vuelta a español en moléculas, con el LUMO conservado');
   ok(d.querySelectorAll('#msel button').length === 7, 'moléculas: 7 orbitales en el CO');
+  click('#mols button', (b) => b.textContent === 'O₂'); await sleep(600);
+  ok(info().includes('Oxígeno molecular') && /⟨S²⟩ \(ideal\) \| 2,0\d+ \(2,000\)/.test(info()), 'moléculas con espín: O₂ con ⟨S²⟩ frente al ideal -> ' + (info().match(/⟨S²⟩ \(ideal\) \| \S+ \S+/) || ['sin fila'])[0]);
+  ok(/Población de espín \(Mulliken\) \| O 1,00, O 1,00/.test(info()), 'moléculas con espín: población de espín 1,00 en cada oxígeno');
+  ok(d.querySelectorAll('#msel button').length === 16, 'moléculas con espín: 16 orbitales en el O₂ (' + d.querySelectorAll('#msel button').length + ')');
+  click('#msel button', (b) => b.textContent === 'ρα − ρβ'); await sleep(400);
+  ok(info().includes('Integral de la densidad de espín') && /2,00/.test(info()) && $('#mnote').textContent.includes('polarización de espín'), 'moléculas con espín: densidad de espín del O₂');
+  click('#mols button', (b) => b.textContent === 'NO'); await sleep(600);
+  ok(d.querySelectorAll('#msel button').length === 14 && /Población de espín \(Mulliken\) \| N 0,\d+, O 0,\d+/.test(info()), 'moléculas con espín: NO con 14 orbitales y población de espín');
+  click('#langs button', (b) => b.dataset.l === 'en'); await sleep(900);
+  ok(d.querySelector('#msel').textContent.includes('α occupied') && d.querySelector('#msel').textContent.includes('Spin density'), 'inglés, moléculas con espín: grupos de orbitales');
+  ok(info().includes('Nitric oxide') && info().includes('Spin population (Mulliken)'), 'inglés, moléculas con espín: nombre y etiquetas');
+  click('#langs button', (b) => b.dataset.l === 'es'); await sleep(900);
   ok($('#radsec').hidden === true && $('#mpanel').hidden === false, 'moléculas: panel propio y gráfica radial oculta');
   click('#modes button', (b) => b.dataset.m === 'h'); await sleep(400);
   ok($('#radsec').hidden === false && info().includes('Energía'), 'vuelta al modo hidrógeno en español');
