@@ -112,6 +112,30 @@ ION_BIO = {
 }
 
 
+CATEGORY = {
+    1: "nonmetal", 2: "noble", 3: "alkali", 4: "alkaline", 5: "metalloid", 6: "nonmetal", 7: "nonmetal",
+    8: "nonmetal", 9: "halogen", 10: "noble", 11: "alkali", 12: "alkaline", 13: "post", 14: "metalloid",
+    15: "nonmetal", 16: "nonmetal", 17: "halogen", 18: "noble", 19: "alkali", 20: "alkaline",
+    **{z: "transition" for z in range(21, 31)}, 31: "post", 32: "metalloid", 33: "metalloid", 34: "nonmetal",
+    35: "halogen", 36: "noble",
+}
+
+
+def period_of(Z: int) -> int:
+    return 1 if Z <= 2 else 2 if Z <= 10 else 3 if Z <= 18 else 4
+
+
+def group_of(Z: int) -> int:
+    """Grupo IUPAC (1-18) de los elementos 1-36."""
+    if Z <= 2:
+        return 1 if Z == 1 else 18
+    if Z <= 10:
+        return Z - 2 if Z <= 4 else Z + 8
+    if Z <= 18:
+        return Z - 10 if Z <= 12 else Z
+    return Z - 18
+
+
 def configuration(Z: int) -> dict:
     """Ocupación del estado fundamental {(n, l): electrones}, con las excepciones Cr y Cu."""
     if not 1 <= Z <= 36:
@@ -213,10 +237,13 @@ def atom_record(Z: int, charge: int = 0, npts: int = 160) -> dict:
     total = sum(shells.values())
     top = total.max()
     ref = ext if charge == 0 else max(s["extent_a0"] for s in atom_record(Z, 0, npts)["subshells"])
+    outer = max(subs, key=lambda s: (s["n"], s["l"]))
     return {
         "Z": Z, "key": str(Z) if charge == 0 else f"{Z}{charge:+d}", "charge": charge,
         "electrons": Z - charge, "symbol": ion_symbol(SYMBOLS[Z - 1], charge), "name": NAMES[Z - 1],
         "name_en": NAMES_EN[Z - 1],
+        "group": group_of(Z), "period": period_of(Z), "category": CATEGORY[Z], "outer_subshell": outer["label"],
+        "outer_electrons": sum(s["occ"] for s in subs if s["n"] == outer["n"]),
         "config": config_string(occ), "subshells": subs, "extent_a0": ext, "ref_extent_a0": ref,
         "bio": ION_BIO.get((Z, charge)) if charge else BIO.get(Z),
         "bio_en": ION_BIO_EN.get((Z, charge)) if charge else BIO_EN.get(Z),

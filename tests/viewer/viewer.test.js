@@ -22,7 +22,7 @@ const glStub = () => new Proxy({}, { get: (_t, k) => {
 } });
 const ctx2d = new Proxy({}, { get: () => () => {}, set: () => true });
 
-function boot(navLang) {
+function boot(navLang, strip = false) {
   const pageErrors = [];
   const dom = new JSDOM(html, {
     runScripts: 'dangerously', pretendToBeVisual: true, url: 'http://localhost/',
@@ -32,7 +32,12 @@ function boot(navLang) {
       w.fetch = async (u) => {
         const p = path.join(root, u);
         if (!fs.existsSync(p)) return { ok: false, status: 404 };
-        const b = fs.readFileSync(p);
+        let b = fs.readFileSync(p);
+        if (strip && u === 'data/atoms.json') {  // simula datos antiguos, sin los campos de la v0.11
+          const j = JSON.parse(b.toString('utf8'));
+          for (const a of [...j.atoms, ...j.ions]) for (const k of ['category', 'group', 'period', 'outer_subshell', 'outer_electrons']) delete a[k];
+          b = Buffer.from(JSON.stringify(j));
+        }
         return { ok: true, json: async () => JSON.parse(b.toString('utf8')),
                  arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
       };
@@ -53,6 +58,14 @@ const ok = (c, msg) => { console.log((c ? 'OK     ' : 'FALLA  ') + msg); if (!c)
   ok(d0.documentElement.lang === 'en' && d0.title.includes('Orbital viewer'), 'navegador en inglés: título e idioma del documento');
   en0.w.close();
 
+  // --- el visor tolera datos antiguos (sin los campos de las fichas) en lugar de romperse
+  const old = boot('es-ES', true); await sleep(500);
+  const dOld = old.w.document;
+  [...dOld.querySelectorAll('#modes button')].find((b) => b.dataset.m === 'a').click(); await sleep(700);
+  ok(dOld.querySelector('#msg').style.display !== 'grid' && [...dOld.querySelector('#info').children].map((e) => e.textContent).join(' ').includes('Carbono') && dOld.querySelector('#ficha').textContent === '',
+     'datos antiguos: el modo Átomos funciona y la ficha queda vacía en vez de romper la página');
+  old.w.close();
+
   // --- sesión principal en español
   const { w, pageErrors } = boot('es-ES'); await sleep(500);
   const d = w.document, $ = (s) => d.querySelector(s);
@@ -72,9 +85,18 @@ const ok = (c, msg) => { console.log((c ? 'OK     ' : 'FALLA  ') + msg); if (!c)
   ok(/Subcapa 3d HF/.test(info()) && /Diferencia subcapa \| \+5\d[.,]\d/.test(info()), 'átomos: Fe, subcapa 3d frente a HF (+50 a +59 %)');
   ok(/Diferencia \| \+1[89][.,]\d/.test(info()), 'átomos: Fe, radio medio total (+18 a +19 %, con la configuración forzada)');
   ok(/\+56,\d/.test(info()), 'español: decimales con coma');
+  const fch = $('#ficha').textContent;
+  ok(fch.includes('metal de transición, grupo 8, periodo 4') && fch.includes('2 electrones en su capa más externa') && fch.includes('subcapa más externa, 4s'), 'ficha del hierro en español -> ' + fch.slice(0, 80));
+  ok($('#bri') && $('#cb') && $('#bri').value === '3', 'controles de brillo y de paleta apta para daltonismo');
+  $('#cb').checked = true; $('#bri').value = '6'; await sleep(150);
+  ok(!$('#msg').style.display || $('#msg').style.display !== 'grid', 'paleta para daltonismo y brillo activados sin errores');
+  click('#ions button', (b) => b.textContent === 'Cl⁻'); await sleep(300);
+  const fcl = $('#ficha').textContent;
+  ok(fcl.includes('es un anión de cloro') && fcl.includes('ha ganado 1 electrón') && /isoelectrónico con Ar, K⁺, Ca²⁺/.test(fcl), 'ficha del Cl⁻: anión isoelectrónico con Ar, K⁺ y Ca²⁺ -> ' + fcl.slice(0, 60));
   click('#ions button', (b) => b.textContent === 'Fe²⁺'); await sleep(300);
   ok(info().includes('Carga') && info().includes('+2') && info().includes('Fe²⁺'), 'iones: Fe²⁺ con carga +2');
   ok(info().includes('HF frente al neutro'), 'iones: fila frente al átomo neutro');
+  ok($('#ficha').textContent.includes('ha perdido 2 electrones') && !/electrónes/.test($('#ficha').textContent), 'ficha del Fe²⁺: ha perdido 2 electrones (plural correcto)');
   const asel = $('#asel').textContent;
   ok(asel.includes('3d') && !asel.includes('4s'), 'iones: Fe²⁺ conserva 3d y pierde 4s');
 
@@ -83,6 +105,7 @@ const ok = (c, msg) => { console.log((c ? 'OK     ' : 'FALLA  ') + msg); if (!c)
   click('#asel button', (b) => b.dataset.k === '3d:-2'); await sleep(300);
   click('#langs button', (b) => b.dataset.l === 'en'); await sleep(900);
   ok($('.sub').textContent.includes('Atomic orbitals') && d.title.includes('Orbital viewer'), 'inglés: cabecera y título');
+  ok($('#ficha').textContent.includes('transition metal, group 8, period 4') && $('#ficha').textContent.includes('Iron (Fe) is element 26'), 'inglés: ficha del hierro');
   ok(info().includes('Element') && info().includes('Iron (Fe)') && info().includes('Effective Z'), 'inglés: etiquetas y nombre del elemento -> ' + info().slice(0, 70));
   ok(/Subshell 3d, HF/.test(info()) && /Subshell difference \| \+56\.\d/.test(info()), 'inglés: subcapa 3d frente a HF y decimales con punto');
   ok($('#bio').textContent.startsWith('Biomedical relevance: Center of hemoglobin'), 'inglés: relevancia biomédica del hierro');
@@ -101,6 +124,9 @@ const ok = (c, msg) => { console.log((c ? 'OK     ' : 'FALLA  ') + msg); if (!c)
   click('#langs button', (b) => b.dataset.l === 'es'); await sleep(900);
   ok(info().includes('Monóxido') && $('#mnote').textContent.includes('retrodonación') && $('#mnote').textContent.includes('virtuales'), 'vuelta a español en moléculas, con el LUMO conservado');
   ok(d.querySelectorAll('#msel button').length === 7, 'moléculas: 7 orbitales en el CO');
+  const mols = JSON.parse(fs.readFileSync(path.join(root, 'data', 'molecules.json'), 'utf8')).molecules;
+  const nb = (k) => w.orbitae.bonds(mols.find((m) => m.key === k).atoms).length;
+  ok(nb('H2O') === 2 && nb('NH3') === 3 && nb('CO2') === 2 && nb('CO') === 1 && nb('N2') === 1 && nb('O2') === 1 && nb('NO') === 1, 'enlaces detectados: H₂O 2, NH₃ 3, CO₂ 2, CO 1, N₂ 1, O₂ 1, NO 1');
   click('#mols button', (b) => b.textContent === 'O₂'); await sleep(600);
   ok(info().includes('Oxígeno molecular') && /⟨S²⟩ \(ideal\) \| 2,0\d+ \(2,000\)/.test(info()), 'moléculas con espín: O₂ con ⟨S²⟩ frente al ideal -> ' + (info().match(/⟨S²⟩ \(ideal\) \| \S+ \S+/) || ['sin fila'])[0]);
   ok(/Población de espín \(Mulliken\) \| O 1,00, O 1,00/.test(info()), 'moléculas con espín: población de espín 1,00 en cada oxígeno');

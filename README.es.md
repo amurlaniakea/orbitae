@@ -26,7 +26,8 @@ exacto a los átomos 1-36, con una suite de pruebas numéricas que comprueba cad
   con su comparación frente a Hartree-Fock.
 - **Moléculas pequeñas** (H₂O, NH₃, CO, N₂, CO₂ y las de espín O₂ y NO) con orbitales moleculares de Hartree-Fock, densidad de espín y exportación `.cube`.
 - **Visor WebGL puro**, sin librerías de terceros y con política CSP que solo permite conectar con
-  su propio servidor.
+  su propio servidor. Ofrece una paleta apta para daltonismo, control de brillo, enlaces entre núcleos en las moléculas y
+  una ficha breve de cada elemento e ion (grupo, periodo, categoría, electrones externos, series isoelectrónicas).
 
 ## Límites (a propósito, explícitos)
 

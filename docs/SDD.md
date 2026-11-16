@@ -1,4 +1,4 @@
-# SDD Orbitae (v0.10)
+# SDD Orbitae (v0.11)
 
 Autor: Pedro Sordo Martínez. Licencia: AGPL-3.0-or-later.
 
@@ -24,10 +24,10 @@ nuclear y moléculas pequeñas. Las aproximaciones se declaran en la propia inte
 - RF1 Orbitales hidrogenoides reales y complejos (n, l, m), hasta n = 4. HECHO (v0.1, v0.3).
 - RF2 Átomos 1-36 con reglas de Slater y orbitales tipo Slater; nube total y orbitales. HECHO (v0.4).
 - RF3 Alternar nube total y orbital individual. HECHO (v0.4).
-- RF4 Fases en dos colores y escala común; isosuperficies y curva de transferencia: pendientes.
+- RF4 Fases en dos colores y escala común; paleta apta para daltonismo y control de brillo: HECHO (v0.11); isosuperficies: pendientes.
 - RF5 Iones de interés biomédico con comparación frente a HF: HECHO (v0.6).
 - RF6 Comparación con Hartree-Fock (PySCF), total y por subcapa: HECHO (v0.5, v0.7). Moléculas pequeñas, de capa cerrada y con espín (O₂, NO): HECHO (v0.8, v0.10).
-- RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica por elemento, ya en español e inglés).
+- RF7 Fichas de contenido por elemento y nivel (ES/EN): parcial (frase biomédica y ficha generada por elemento e ion, en español e inglés).
 - RF8 Exportar orbitales en formato .cube: HECHO para moléculas (v0.8); imagen y datos de átomos: pendiente.
 
 ## 5. Requisitos no funcionales
@@ -72,7 +72,8 @@ del visor en jsdom debe pasar antes de publicar.
 | v0.8.1 | Datos generados en la CI y prueba funcional del visor | hecho |
 | v0.9 | Interfaz bilingüe ES/EN del visor y textos biomédicos en inglés | hecho |
 | v0.10 | Moléculas con espín (O₂, NO): UHF, densidad de espín y contaminación de espín | hecho |
-| v0.11 | Más biomoléculas pequeñas y optimización de geometría | siguiente |
+| v0.11 | Enlaces entre núcleos, paleta apta para daltonismo, brillo y fichas por elemento e ion | hecho |
+| v0.12 | Más biomoléculas pequeñas y optimización de geometría | siguiente |
 
 ## 9. Riesgos
 Licencias de tablas de datos, rendimiento en móviles, afirmaciones médicas excesivas,

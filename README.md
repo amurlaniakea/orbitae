@@ -24,7 +24,9 @@ biomedically relevant ions and small molecules, backed by a numerical test suite
 - **Biomedically relevant ions** (Na⁺, K⁺, Mg²⁺, Ca²⁺, Cl⁻, Fe²⁺, Fe³⁺, Cu⁺, Cu²⁺, Zn²⁺, among others), compared
   against Hartree-Fock.
 - **Small molecules** (H₂O, NH₃, CO, N₂, CO₂ and the open-shell O₂ and NO) with Hartree-Fock molecular orbitals, spin density and `.cube` export.
-- **Pure WebGL viewer** in English and Spanish, with no third-party libraries and a CSP that only allows connections to its own server.
+- **Pure WebGL viewer** in English and Spanish, with no third-party libraries and a CSP that only allows connections to its own server. It offers a colorblind-safe palette,
+  a brightness control, bonds between nuclei in molecules and a short sheet for each element and ion (group, period, category,
+  outer electrons, isoelectronic series).
 
 ## Limits (explicit on purpose)
 
